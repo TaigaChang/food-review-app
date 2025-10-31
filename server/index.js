@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import authenticateToken from "./middleware/authenticate_token.js";
-import authRoutes from "./routes/auth.js";
+import authRoutes from "./routes/auth-router.js";
 
 dotenv.config();
 const app = express();
@@ -12,8 +12,14 @@ app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
+// Debug middleware to log all requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
 // Mount routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes);  // This mounts all auth routes under /api/auth
 
 // Public health endpoint
 app.get("/", (req, res) => {

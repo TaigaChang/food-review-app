@@ -45,8 +45,8 @@ export function authenticateToken(req, res, next) {
 			req.user = payload || {};
 			next();
 		});
-	} catch (e) {
-		console.error("Error in authenticateToken middleware:", e);
+	} catch (error) {
+		console.error("Error in authenticateToken middleware:", error);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }

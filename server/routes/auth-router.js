@@ -1,16 +1,16 @@
 import express from "express";
 import authenticateToken from "../middleware/authenticate_token.js";
-import { signupHandler } from "../services/auth-service.js";
+import { signupHandler, loginHandler } from "../services/auth-service.js";
 const router = express.Router();
 
 // Public routes (no auth required)
-router.post("/signup", (req, res, next) => {
+router.post("/signup", (req, res) => {
     // console.log('Router received body:', req.body); // Debug log
-    signupHandler(req, res, next);
+    signupHandler(req, res);
 });
 
 router.post("/login", (req, res) => {
-    res.status(501).json({ message: "Login not implemented yet" });
+    loginHandler(req, res);
 });
 
 // Test endpoint to verify routing

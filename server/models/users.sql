@@ -1,11 +1,12 @@
 -- Users table schema
 CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR(100) NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name_first VARCHAR(100) NOT NULL,
+    name_last VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE = InnoDB;
 
 -- Create index on email for faster lookups during authentication
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX idx_users_email ON users(email);

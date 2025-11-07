@@ -9,6 +9,11 @@ async function signupHandler(req, res, next) {
     const userFields = { name_first, name_last, email, password };
     
     try {
+        for (const field in userFields) {
+            if (userFields[field] === undefined || userFields[field] === null) {
+                return res.status(400).json({ message: `Missing field: ${field}` });
+            }
+        }
 
         for (const field in userFields) {
             const isValid = await Validations[field](userFields[field]);

@@ -4,14 +4,9 @@ import { signupHandler, loginHandler } from "../services/auth-service.js";
 const router = express.Router();
 
 // Public routes (no auth required)
-router.post("/signup", (req, res) => {
-    // console.log('Router received body:', req.body); // Debug log
-    signupHandler(req, res);
-});
+router.post("/signup", signupHandler);
 
-router.post("/login", (req, res) => {
-    loginHandler(req, res);
-});
+router.post("/login", loginHandler);
 
 // Test endpoint to verify routing
 router.get("/test", (req, res) => {

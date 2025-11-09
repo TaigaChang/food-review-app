@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import authenticateToken from "./middleware/authenticate_token.js";
 import authRoutes from "./routes/auth-router.js";
 import restaurantsRouter from './routes/restaurants-router.js';
+import reviewsRouter from './routes/reviews-router.js';
 
 dotenv.config();
 const app = express();
@@ -23,6 +24,8 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);  // This mounts all auth routes under /api/auth
 
 app.use('/api/restaurants', restaurantsRouter);
+
+app.use('/api/reviews', reviewsRouter);
 
 // Public health endpoint
 app.get("/", (req, res) => {

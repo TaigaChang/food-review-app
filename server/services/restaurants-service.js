@@ -1,12 +1,12 @@
 import pool from '../db.js';
 
 async function getRestaurantsHandler(req, res, next) {
-    const restaurantId = req.params.id;
+    const restaurant_id = req.params.id;
     try {
-        if (restaurantId) {
+        if (restaurant_id) {
             const [rows] = await pool.query(
                 `SELECT * FROM restaurants WHERE id = ?`,
-                [restaurantId]
+                [restaurant_id]
             );
 
             if (!rows || rows.length === 0) {

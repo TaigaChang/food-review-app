@@ -20,13 +20,13 @@ async function postReviewHandler(req, res) {
         }
 
         const [results] = await pool.query(
-            `INSERT INTO reviews (user_id, restaurant_id, taste, ingredients, ambiance, pricing, comment) VALUES (?, ?, ?, ?)`,
-            [user_id, restaurant_id, taste, ingredients, ambiance, pricing, comment, createdAt]
+            `INSERT INTO reviews (user_id, restaurant_id, taste, ingredients, ambiance, pricing, comment) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [user_id, restaurant_id, taste, ingredients, ambiance, pricing, comment]
         );
 
         return res.status(201).json({
-            message: "User created successfully",
-            user_id: results.insertId,
+            message: "Review created successfully",
+            review_id: results.insertId,
         });
     }
     catch (error) {
@@ -35,7 +35,34 @@ async function postReviewHandler(req, res) {
     }
 }
 
+/* Create a review getter based on specific times.*/
 async function getRestaurantReviewHandler(req, res) {
+    const restaurant_id = req.query.restaurant_id;
+    const created_after = req.query.created_after;
+
+    try {
+        if (created_after) {
+            const [rows] = await pool.query(
+                `SELECT * FROM reviews WHERE restaurant_id = ? AND created_at >= ?`,
+                [restaurant_id, created_after]
+            );
+
+            if (!rows || rows.length === 0) {
+                return res.status(404).json({ message: 'Reviews not found' });
+            }
+
+            return res.status(200).json({ reviews: rows });
+        }
+
+        const [rows] = await pool.query(
+            `SELECT * FROM reviews WHERE restaurant_id = ?`,
+            [restaurant_id]
+        );
+        return res.status(200).json({ reviews: rows });
+    } catch (error) {
+        console.error('Error in getting reviews:', error);
+        return res.status(500).json({ message: error.sqlMessage || error.message });
+    }
 }
 
 export {

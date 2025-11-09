@@ -15,14 +15,8 @@ import jwt from "jsonwebtoken";
  */
 export function authenticateToken(req, res, next) {
 	try {
-		const authHeader = req.headers.authorization || req.headers.Authorization;
-		let token;
-
-		if (authHeader && typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
-			token = authHeader.split(" ")[1];
-		} else if (req.cookies && req.cookies.token) {
-			token = req.cookies.token;
-		}
+		// Read token exclusively from cookie (cookie-parser required)
+		const token = req.cookies?.token;
 
 		if (!token) {
 			return res.status(401).json({ message: "Unauthorized: token required" });

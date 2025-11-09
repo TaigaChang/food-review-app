@@ -3,9 +3,10 @@
 
 import express from 'express';
 import { postReviewHandler, getRestaurantReviewHandler } from '../services/reviews-service.js';
+import authenticateToken from '../middleware/authenticate_token.js';
 const router = express.Router();
 
-router.post('/', postReviewHandler);
+router.post('/', authenticateToken, postReviewHandler);
 
 router.get('/restaurant', getRestaurantReviewHandler);
 

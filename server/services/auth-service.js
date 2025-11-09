@@ -1,6 +1,7 @@
 import pool from "../db.js";
 import Validations from "../validations/auth-validation.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 // get data from user and validate and create user
 async function signupHandler(req, res, next) {
@@ -65,7 +66,27 @@ async function loginHandler(req, res, next) {
         return res.status(401).json({ message: "Invalid password" });
         }
 
-        return res.status(200).json({ message: "Login successful", user_id: user.id });
+        // Ensure JWT secret is provided
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            console.error("JWT_SECRET is not set in environment");
+            return res.status(500).json({ message: "Server configuration error" });
+        }
+
+        // Create a minimal payload and sign
+        const payload = { id: user.id, email: user.email };
+        const token = jwt.sign(payload, secret, { expiresIn: "1h" });
+
+        // Set token in an httpOnly cookie and return token in JSON for convenience
+        // `cookie-parser` is enabled in `server/index.js` so `res.cookie` will work.
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV !== "production",
+            sameSite: "lax",
+            maxAge: 60 * 60 * 1000, // 1 hour
+        });
+
+        return res.status(200).json({ message: "Login successful", user_id: user.id, token });
     }
     catch (error) {
         console.error("Error in logging in:", error);

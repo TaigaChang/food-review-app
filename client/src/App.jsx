@@ -1,16 +1,16 @@
-import { useState } from 'react'
-import './App.css'
-import AuthPage from './AuthPage.jsx'
+
+import Header from './components/Header';
+import Homepage from './pages/home-page.jsx';
+
+
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
     <>
-      <h1>Umami</h1>
-      <AuthPage />
+      <Header />
+      <Homepage />
     </>
-  )
+  );
 }
 
 export default App

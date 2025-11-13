@@ -1,0 +1,79 @@
+/* Header styles for Umami app */
+header {
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo-section {
+  display: flex;
+  align-items: center;
+}
+.logo {
+  font-size: 2rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #d32f2f 0%, #f57c00 50%, #fbc02d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -1px;
+  text-decoration: none;
+}
+nav {
+  display: flex;
+  gap: 2rem;
+}
+nav a {
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: color 0.3s;
+}
+nav a:hover {
+  color: #d32f2f;
+}
+.auth-buttons {
+  display: flex;
+  gap: 1rem;
+}
+.auth-buttons a {
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+.login-btn {
+  color: #333;
+  border: 2px solid #333;
+}
+.login-btn:hover {
+  color: #fff;
+  background: #333;
+}
+.signup-btn {
+  background: linear-gradient(135deg, #d32f2f, #f57c00);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+}
+.signup-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(211, 47, 47, 0.4);
+}
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  nav {
+    gap: 1rem;
+    font-size: 0.9rem;
+  }
+}

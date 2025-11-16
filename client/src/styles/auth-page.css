@@ -1,0 +1,97 @@
+/* Auth Page Styles - Umami App */
+#authpage-root {
+  min-height: 100vh;
+  background: linear-gradient(120deg, #fff8e1 0%, #ffe0b2 100%);
+  font-family: 'Inter', 'Segoe UI', Arial, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.auth-container {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(211,47,47,0.08);
+  padding: 2.5rem 2rem 2rem 2rem;
+  max-width: 400px;
+  width: 100%;
+  margin: 2rem auto;
+}
+.auth-container h2 {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #d32f2f 0%, #f57c00 50%, #fbc02d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.auth-form input {
+  padding: 0.9rem 1rem;
+  border-radius: 6px;
+  border: 1.5px solid #fbc02d;
+  font-size: 1rem;
+  outline: none;
+  transition: border 0.2s;
+}
+.auth-form input:focus {
+  border-color: #d32f2f;
+}
+.auth-form button[type="submit"] {
+  background: linear-gradient(135deg, #d32f2f, #f57c00);
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  font-size: 1.1rem;
+  border-radius: 6px;
+  padding: 0.9rem 0;
+  margin-top: 0.5rem;
+  box-shadow: 0 4px 16px rgba(211, 47, 47, 0.18);
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+.auth-form button[type="submit"]:hover {
+  background: linear-gradient(135deg, #f57c00, #d32f2f);
+  transform: translateY(-2px) scale(1.03);
+}
+.auth-switch {
+  text-align: center;
+  margin-top: 1.2rem;
+}
+.auth-switch span {
+  color: #444;
+  font-size: 1rem;
+}
+.auth-switch button {
+  background: #fff3e0;
+  color: #d32f2f;
+  border: 1.5px solid #fbc02d;
+  border-radius: 4px;
+  font-weight: 700;
+  margin-left: 8px;
+  padding: 0.5rem 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.auth-switch button:hover {
+  background: #ffe0b2;
+  color: #f57c00;
+}
+.auth-msg {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.auth-msg.success {
+  color: #388e3c;
+}
+.auth-msg.error {
+  color: #d32f2f;
+}

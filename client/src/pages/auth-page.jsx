@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import '../styles/auth-page.css';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -9,7 +10,7 @@ export default function AuthPage() {
   const [msgType, setMsgType] = useState('');
 
   const handleSwitch = () => {
-    setIsLogin((v) => !v);
+    setIsLogin(v => !v);
     setMsg('');
     setMsgType('');
   };
@@ -34,9 +35,8 @@ export default function AuthPage() {
         body: JSON.stringify(body),
       });
       const data = await res.json();
-      console.log(data)
       if (!res.ok) throw new Error(data.message || 'Error');
-      setMsg(isLogin ? 'Login successful!' : 'Signup successful! You can now log in.');
+      setMsg(isLogin ? 'Login successful! Welcome back to Umami.' : 'Signup successful! You can now log in.');
       setMsgType('success');
       if (!isLogin) setIsLogin(true);
     } catch (err) {
@@ -46,45 +46,52 @@ export default function AuthPage() {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: '40px auto', background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px #0001', padding: '2rem', fontFamily: 'sans-serif' }}>
-      <h2 style={{ textAlign: 'center' }}>{isLogin ? 'Login' : 'Sign Up'}</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {!isLogin && (
+    <div id="authpage-root">
+      <div className="auth-container">
+        <h2>{isLogin ? 'Welcome Back' : 'Create Your Account'}</h2>
+        <p style={{ textAlign: 'center', margin: '0 0 1.5rem', color: '#555', fontSize: '0.95rem' }}>
+          {isLogin
+            ? 'Log in to track tastes, rate experiences & discover smarter recommendations.'
+            : 'Join Umami to rate taste, ambiance & pricing with rich 100-point reviews.'}
+        </p>
+        <form onSubmit={handleSubmit} className="auth-form">
+          {!isLogin && (
+            <input
+              type="text"
+              placeholder="Your name"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              required={!isLogin}
+            />
+          )}
           <input
-            type="text"
-            placeholder="Name (signup only)"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            required={!isLogin}
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
           />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+            />
+          <button type="submit">
+            {isLogin ? 'Log In' : 'Sign Up'}
+          </button>
+        </form>
+        <div className="auth-switch">
+          <span>{isLogin ? "Don't have an account?" : 'Already have an account?'}</span>
+          <button onClick={handleSwitch} type="button">
+            {isLogin ? 'Sign Up' : 'Log In'}
+          </button>
+        </div>
+        {msg && (
+          <div className={`auth-msg ${msgType}`}>{msg}</div>
         )}
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit" style={{ background: '#4caf50', color: '#fff', border: 'none', fontWeight: 'bold' }}>
-          {isLogin ? 'Login' : 'Sign Up'}
-        </button>
-      </form>
-      <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-        <span>{isLogin ? "Don't have an account?" : 'Already have an account?'}</span>
-        <button onClick={handleSwitch} style={{ background: '#2196f3', color: '#fff', border: 'none', marginLeft: 8 }}>
-          {isLogin ? 'Sign Up' : 'Login'}
-        </button>
       </div>
-      {msg && (
-        <div style={{ color: msgType === 'success' ? '#080' : '#c00', textAlign: 'center', marginTop: 8 }}>{msg}</div>
-      )}
     </div>
   );
 }

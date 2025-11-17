@@ -8,7 +8,6 @@ export default function Header() {
       </div>
           <nav>
             <a href="#restaurants">Restaurants</a>
-            <a href="/how-it-works">How it Works</a>
             <a href="/faq">FAQ</a>
           </nav>
       <div className="auth-buttons">

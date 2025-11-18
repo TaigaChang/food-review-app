@@ -12,26 +12,30 @@
 
 
 /* Hero Section */
-#homepage-root .hero { 
-  background: linear-gradient(135deg, #fff5f5 0%, #ffe8e0 100%);
-  padding: 4rem 2rem;
+#homepage-root .hero {
+  /* dark overlay over the homepage asset for legibility */
+  background-image: linear-gradient(rgba(10,10,10,0.45), rgba(10,10,10,0.35)), url('/src/assets/homepage.jpg');
+  background-size: cover;
+  background-position: center;
+  padding: 6rem 2rem;
   text-align: center;
   margin-bottom: 0;
+  color: #fff;
 }
 
-#homepage-root .hero h1 { 
-  font-size: 3.5rem; 
-  color: #1a1a1a; 
-  margin-bottom: 1rem; 
+#homepage-root .hero h1 {
+  font-size: 3.5rem;
+  color: #fff;
+  margin-bottom: 1rem;
 }
 
-#homepage-root .hero p { 
-  font-size: 1.4rem; 
-  color: #555; 
-  margin-bottom: 2rem; 
-  max-width: 600px; 
-  margin-left: auto; 
-  margin-right: auto; 
+#homepage-root .hero p {
+  font-size: 1.4rem;
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 2rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* CTA Buttons */

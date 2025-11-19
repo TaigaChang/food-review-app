@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import '../styles/auth-page.css';
 
 export default function AuthPage() {
@@ -9,10 +9,25 @@ export default function AuthPage() {
   const [msg, setMsg] = useState('');
   const [msgType, setMsgType] = useState('');
 
+  // initialize isLogin from query param when component mounts
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const mode = params.get('mode');
+      if (mode === 'signup') setIsLogin(false);
+      else if (mode === 'login') setIsLogin(true);
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
   const handleSwitch = () => {
     setIsLogin(v => !v);
     setMsg('');
     setMsgType('');
+    // update URL to reflect new mode (keeps linkable state without router)
+    const newMode = isLogin ? 'signup' : 'login';
+    try { history.replaceState(null, '', `/auth?mode=${newMode}`); } catch {}
   };
 
   const handleSubmit = async (e) => {

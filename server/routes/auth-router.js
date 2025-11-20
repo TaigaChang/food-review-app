@@ -14,8 +14,11 @@ router.get("/test", (req, res) => {
 });
 
 // Protected routes (require auth)
-router.get("/me", authenticateToken, (req, res) => {
-    res.json({ user: req.user });
+app.get('/api/auth/me', authenticateToken, (req, res) => {
+  // assume authenticateToken sets req.user = { id, email, name, ... }
+  if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+  const { id, email, name } = req.user;
+  res.json({ user: { id, email, name } });
 });
 
 export default router;

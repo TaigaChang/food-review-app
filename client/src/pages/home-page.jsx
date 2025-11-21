@@ -9,8 +9,8 @@ export default function Homepage() {
         <h1>Discover, Rate &amp; Track Restaurants</h1>
         <p>Rate taste, ingredients, ambiance &amp; pricing on a 100-point scale. Get personalized recommendations and watch how restaurants evolve over time.</p>
         <div className="cta-buttons">
-          <a href="/auth.html" className="cta-btn cta-primary">Start Exploring</a>
-          <a href="#about" className="cta-btn cta-secondary">Learn More</a>
+          <a href="/auth" className="cta-btn cta-primary">Start Exploring</a>
+          <a href="/faq" className="cta-btn cta-secondary">Learn More</a>
         </div>
       </section>
       <section className="features">

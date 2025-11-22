@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import "../styles/header.css";
+import { AuthContext } from './auth-check.jsx';
 
 export default function Header() {
   const [q, setQ] = useState("");
+  const { user } = useContext(AuthContext) || {};
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -32,8 +34,16 @@ export default function Header() {
       </form>
 
       <div className="auth-buttons">
-  <a href="/auth?mode=login" className="login-btn">Log In</a>
-  <a href="/auth?mode=signup" className="signup-btn">Sign Up</a>
+        {user ? (
+          <div className="signed-in">
+            <span>Signed in as {user.email}</span>
+          </div>
+        ) : (
+          <>
+            <a href="/auth?mode=login" className="login-btn">Log In</a>
+            <a href="/auth?mode=signup" className="signup-btn">Sign Up</a>
+          </>
+        )}
       </div>
     </header>
   );

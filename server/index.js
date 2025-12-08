@@ -10,13 +10,19 @@ import reviewsRouter from './routes/reviews-router.js';
 
 dotenv.config();
 const app = express();
-app.use(cors());
+// Allow the Vite dev server (http://localhost:5173) to make credentialed requests
+// during development. In production this should be restricted to your app origin.
+const corsOptions = {
+  origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
 // Debug middleware to log all requests
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
+  // console.log(`${req.method} ${req.url}`);
   next();
 });
 

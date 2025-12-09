@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '../components/auth-check.jsx';
+import { useNavigate } from 'react-router-dom';
 import '../styles/auth-page.css';
 
 export default function AuthPage() {
@@ -8,6 +10,8 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [msg, setMsg] = useState('');
   const [msgType, setMsgType] = useState('');
+  const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   // initialize isLogin from query param when component mounts
   useEffect(() => {
@@ -54,6 +58,27 @@ export default function AuthPage() {
       setMsg(isLogin ? 'Login successful! Welcome back to Umami.' : 'Signup successful! You can now log in.');
       setMsgType('success');
       if (!isLogin) setIsLogin(true);
+
+      // Prefer using user returned directly from login response, if present.
+      if (data && data.user) {
+        login(data.user);
+      } else {
+        // Fallback: fetch current user from /api/auth/me which reads the httpOnly cookie
+        try {
+          const meRes = await fetch('/api/auth/me', { credentials: 'include' });
+          if (meRes.ok) {
+            const meJson = await meRes.json();
+            if (meJson && meJson.user) login(meJson.user);
+          }
+        } catch (e) {
+          // ignore - user will remain unauthenticated in client context
+        }
+      }
+
+      alert('Login Successful!');
+      // navigate to homepage after login/signup
+      navigate('/', { replace: true });
+
     } catch (err) {
       setMsg(err.message);
       setMsgType('error');

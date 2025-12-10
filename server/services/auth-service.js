@@ -2,6 +2,7 @@ import pool from "../db.js";
 import Validations from "../validations/auth-validation.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { COOKIE_MAX_AGE } from "../constants.js";
 
 // get data from user and validate and create user
 async function signupHandler(req, res, next) {
@@ -81,9 +82,9 @@ async function loginHandler(req, res, next) {
         // `cookie-parser` is enabled in `server/index.js` so `res.cookie` will work.
         res.cookie("token", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV !== "production",
+            secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
-            maxAge: 60 * 60 * 1000, // 1 hour
+            maxAge: COOKIE_MAX_AGE,
         });
 
         return res.status(200).json({ message: "Login successful", user_id: user.id, token });

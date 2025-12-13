@@ -140,6 +140,7 @@ Backend API Routes
 | ------ | ------------------------------------------- | -------------------------------- |
 | `POST` | `/api/auth/signup`                          | Create a user                    |
 | `POST` | `/api/auth/login`                           | Login and receive token          |
+| `GET`  | `/api/auth/me`                              | Return current authenticated user info |
 | `GET`  | `/api/restaurants`                          | List restaurants                 |
 | `GET`  | `/api/restaurants/:id`                      | Get restaurant details + ratings |
 | `POST` | `/api/reviews`                              | Add review (protected)           |

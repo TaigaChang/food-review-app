@@ -19,7 +19,7 @@ export default function Header() {
         <a href="/" className="logo">Umami</a>
       </div>
       <nav>
-        <a href="#restaurants">Restaurants</a>
+        <a href="/restaurant">Restaurants</a>
         <a href="/faq">FAQ</a>
       </nav>
 

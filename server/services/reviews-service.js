@@ -1,5 +1,6 @@
 import pool from '../db.js';
 import Validations from "../validations/reviews-validation.js";
+import { updateAggregatedRatings } from './aggregated-ratings-service.js';
 
 async function postReviewHandler(req, res) {
     const { user_id, restaurant_id, taste, ingredients, ambiance, pricing, comment } = req.body;
@@ -23,6 +24,9 @@ async function postReviewHandler(req, res) {
             `INSERT INTO reviews (user_id, restaurant_id, taste, ingredients, ambiance, pricing, comment) VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [user_id, restaurant_id, taste, ingredients, ambiance, pricing, comment]
         );
+
+        // Update aggregated ratings for this restaurant
+        await updateAggregatedRatings(restaurant_id);
 
         return res.status(201).json({
             message: "Review created successfully",

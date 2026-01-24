@@ -2,6 +2,8 @@ import pool from '../db.js';
 
 async function getRestaurantsHandler(req, res, next) {
     const restaurant_id = req.params.id;
+    const { partial_restaurant } = req.query;
+    
     try {
         if (restaurant_id) {
             const [rows] = await pool.query(
@@ -14,6 +16,16 @@ async function getRestaurantsHandler(req, res, next) {
             }
 
             return res.status(200).json({ restaurant: rows[0] });
+        }
+
+        // Partial search functionality
+        if (partial_restaurant) {
+            const searchTerm = `%${partial_restaurant}%`;
+            const [rows] = await pool.query(
+                `SELECT * FROM restaurants WHERE name LIKE ? OR cuisine LIKE ? OR address LIKE ? LIMIT 5`,
+                [searchTerm, searchTerm, searchTerm]
+            );
+            return res.status(200).json({ restaurants: rows });
         }
 
         const [rows] = await pool.query(`SELECT * FROM restaurants`);

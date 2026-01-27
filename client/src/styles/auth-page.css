@@ -1,12 +1,18 @@
 /* Auth Page Styles - Umami App */
 #authpage-root {
-  min-height: 100vh;
-  background: linear-gradient(120deg, #fff8e1 0%, #ffe0b2 100%);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   font-family: 'Inter', 'Segoe UI', Arial, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
   color: #333;
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
 }
 .auth-container {
   background: #fff;

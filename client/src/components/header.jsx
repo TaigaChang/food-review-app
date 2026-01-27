@@ -44,8 +44,8 @@ export default function Header() {
     }
   };
 
-  const handleResultClick = (restaurantName) => {
-    window.location.href = `/search?q=${encodeURIComponent(restaurantName)}`;
+  const handleResultClick = (restaurantId) => {
+    window.location.href = `/restaurant/${restaurantId}`;
   };
 
   const handleSubmit = (e) => {
@@ -81,7 +81,7 @@ export default function Header() {
                 <div 
                   key={restaurant.id} 
                   className="search-result-item"
-                  onClick={() => handleResultClick(restaurant.name)}
+                  onClick={() => handleResultClick(restaurant.id)}
                 >
                   <div className="result-name">{restaurant.name}</div>
                   <div className="result-cuisine">{restaurant.cuisine}</div>
@@ -91,7 +91,7 @@ export default function Header() {
             </div>
           )}
         </div>
-        <button type="submit">Search</button>
+        <button type="submit"></button>
       </form>
 
       <div className="auth-buttons">
@@ -101,8 +101,9 @@ export default function Header() {
           </div>
         ) : (
           <>
-            <a href="/auth?mode=login" className="login-btn">Log In</a>
-            <a href="/auth?mode=signup" className="signup-btn">Sign Up</a>
+            <a href="/auth?mode=login" className="login-btn">Log in</a>
+            <span className="divider">/</span>
+            <a href="/auth?mode=signup" className="signup-btn">Sign up</a>
           </>
         )}
       </div>

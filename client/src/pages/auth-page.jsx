@@ -3,7 +3,7 @@ import { AuthContext } from '../components/auth-check.jsx';
 import { useNavigate } from 'react-router-dom';
 import '../styles/auth-page.css';
 
-export default function AuthPage() {
+export default function AuthPage({ onClose }) {
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -32,6 +32,13 @@ export default function AuthPage() {
     // update URL to reflect new mode (keeps linkable state without router)
     const newMode = isLogin ? 'signup' : 'login';
     try { history.replaceState(null, '', `/auth?mode=${newMode}`); } catch {}
+  };
+
+  const handleBackdropClick = (e) => {
+    // Only close if clicking directly on the backdrop, not on the form
+    if (e.target.id === 'authpage-root' && onClose) {
+      onClose();
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -76,8 +83,10 @@ export default function AuthPage() {
       }
 
       alert('Login Successful!');
-      // navigate to homepage after login/signup
-      navigate('/', { replace: true });
+      // Close the modal after a small delay to allow auth context to update
+      setTimeout(() => {
+        if (onClose) onClose();
+      }, 300);
 
     } catch (err) {
       setMsg(err.message);
@@ -86,7 +95,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div id="authpage-root">
+    <div id="authpage-root" onClick={handleBackdropClick}>
       <div className="auth-container">
         <h2>{isLogin ? 'Welcome Back' : 'Create Your Account'}</h2>
         <p style={{ textAlign: 'center', margin: '0 0 1.5rem', color: '#555', fontSize: '0.95rem' }}>

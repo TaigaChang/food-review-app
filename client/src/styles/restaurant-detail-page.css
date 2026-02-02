@@ -218,6 +218,12 @@
   align-items: center;
 }
 
+.review-user {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+}
+
 .review-date {
   font-size: 0.8rem;
   color: #999;

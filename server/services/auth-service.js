@@ -2,7 +2,7 @@ import pool from "../db.js";
 import Validations from "../validations/auth-validation.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { COOKIE_MAX_AGE } from "../constants.js";
+import { COOKIE_MAX_AGE, JWT_EXPIRATION } from "../constants.js";
 
 // get data from user and validate and create user
 async function signupHandler(req, res, next) {
@@ -76,7 +76,7 @@ async function loginHandler(req, res, next) {
 
         // Create a minimal payload and sign
         const payload = { id: user.id, email: user.email };
-        const token = jwt.sign(payload, secret, { expiresIn: "1h" });
+        const token = jwt.sign(payload, secret, { expiresIn: JWT_EXPIRATION });
 
         // Set token in an httpOnly cookie and return token in JSON for convenience
         // `cookie-parser` is enabled in `server/index.js` so `res.cookie` will work.
@@ -87,7 +87,17 @@ async function loginHandler(req, res, next) {
             maxAge: COOKIE_MAX_AGE,
         });
 
-        return res.status(200).json({ message: "Login successful", user_id: user.id, token });
+        return res.status(200).json({ 
+            message: "Login successful", 
+            user_id: user.id, 
+            token,
+            user: {
+                id: user.id,
+                email: user.email,
+                name_first: user.name_first,
+                name_last: user.name_last
+            }
+        });
     }
     catch (error) {
         console.error("Error in logging in:", error);

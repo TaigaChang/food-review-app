@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../components/auth-check.jsx';
 import '../styles/restaurant-detail-page.css';
 
 export default function RestaurantDetailPage() {
+  const { user, loading: authLoading } = useContext(AuthContext);
+  const isAuthenticated = !!user;
   const { id } = useParams();
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState(null);
@@ -11,11 +14,53 @@ export default function RestaurantDetailPage() {
   const [monthlyAvg, setMonthlyAvg] = useState(null);
   const [yearlyAvg, setYearlyAvg] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [newReview, setNewReview] = useState({
+    taste: 50,
+    ingredients: 50,
+    ambiance: 50,
+    pricing: 50,
+    comment: ''
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchReviews = async () => {
+    try {
+      const allReviewsRes = await fetch(`/api/reviews/restaurant?restaurant_id=${id}`, {
+        credentials: 'include',
+      });
+      if (allReviewsRes.ok) {
+        const allReviewsData = await allReviewsRes.json();
+        const reviewsWithUsers = allReviewsData.reviews || [];
+        
+        const reviewsWithUserInfo = await Promise.all(
+          reviewsWithUsers.map(async (review) => {
+            try {
+              const userRes = await fetch(`/api/auth/user/${review.user_id}`, {
+                credentials: 'include',
+              });
+              if (userRes.ok) {
+                const userData = await userRes.json();
+                return { ...review, user: userData.user };
+              }
+            } catch (e) {
+              console.error(`Failed to fetch user ${review.user_id}:`, e);
+            }
+            return review;
+          })
+        );
+        
+        setReviews(reviewsWithUserInfo);
+        setAllTimeAvg(allReviewsData.averages);
+      }
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch restaurant details
         const restaurantRes = await fetch(`/api/restaurants/${id}`, {
           credentials: 'include',
         });
@@ -25,51 +70,12 @@ export default function RestaurantDetailPage() {
         }
 
         const restaurantData = await restaurantRes.json();
-        const restaurant = restaurantData.restaurant;
-        setRestaurant(restaurant);
+        setRestaurant(restaurantData.restaurant);
 
-        // Fetch all reviews for all-time average
-        const allReviewsRes = await fetch(`/api/reviews/restaurant?restaurant_id=${id}`, {
-          credentials: 'include',
-        });
-        if (allReviewsRes.ok) {
-          const allReviewsData = await allReviewsRes.json();
-          const reviewsWithUsers = allReviewsData.reviews || [];
-          
-          // Fetch user info for each review
-          const reviewsWithUserInfo = await Promise.all(
-            reviewsWithUsers.map(async (review) => {
-              try {
-                const userRes = await fetch(`/api/auth/user/${review.user_id}`, {
-                  credentials: 'include',
-                });
-                if (userRes.ok) {
-                  const userData = await userRes.json();
-                  return { ...review, user: userData.user };
-                }
-              } catch (e) {
-                console.error(`Failed to fetch user ${review.user_id}:`, e);
-              }
-              return review;
-            })
-          );
-          
-          setReviews(reviewsWithUserInfo);
-          setAllTimeAvg(allReviewsData.averages);
-        }
+        await fetchReviews();
 
-        // Fetch reviews from last 30 days for monthly average
+        // Fetch yearly average
         const now = new Date();
-        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        const monthRes = await fetch(`/api/reviews/restaurant?restaurant_id=${id}&created_after=${monthAgo}`, {
-          credentials: 'include',
-        });
-        if (monthRes.ok) {
-          const monthData = await monthRes.json();
-          setMonthlyAvg(monthData.averages);
-        }
-
-        // Fetch reviews from last 365 days for yearly average
         const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
         const yearRes = await fetch(`/api/reviews/restaurant?restaurant_id=${id}&created_after=${yearAgo}`, {
           credentials: 'include',
@@ -77,6 +83,16 @@ export default function RestaurantDetailPage() {
         if (yearRes.ok) {
           const yearData = await yearRes.json();
           setYearlyAvg(yearData.averages);
+        }
+
+        // Fetch monthly average
+        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const monthRes = await fetch(`/api/reviews/restaurant?restaurant_id=${id}&created_after=${monthAgo}`, {
+          credentials: 'include',
+        });
+        if (monthRes.ok) {
+          const monthData = await monthRes.json();
+          setMonthlyAvg(monthData.averages);
         }
 
         setLoading(false);
@@ -98,6 +114,62 @@ export default function RestaurantDetailPage() {
       Number(avg.avg_pricing)
     ];
     return (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1);
+  };
+
+  const handleAddReviewClick = () => {
+    if (!isAuthenticated) {
+      alert('You must be logged in to add a review');
+      return;
+    }
+    setShowModal(true);
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    
+    if (!isAuthenticated || !user) {
+      alert('You must be logged in to submit a review');
+      return;
+    }
+
+    setSubmitting(true);
+    
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          restaurant_id: parseInt(id),
+          taste: parseInt(newReview.taste),
+          ingredients: parseInt(newReview.ingredients),
+          ambiance: parseInt(newReview.ambiance),
+          pricing: parseInt(newReview.pricing),
+          comment: newReview.comment
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to submit review');
+      }
+
+      alert('Review submitted successfully!');
+      setShowModal(false);
+      setNewReview({
+        taste: 50,
+        ingredients: 50,
+        ambiance: 50,
+        pricing: 50,
+        comment: ''
+      });
+      
+      await fetchReviews();
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      alert('Error submitting review: ' + error.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -184,7 +256,17 @@ export default function RestaurantDetailPage() {
 
       {/* Reviews Section */}
       <div className="reviews-section">
-        <h2>Reviews</h2>
+        <div className="reviews-header">
+          <h2>Reviews</h2>
+          <button 
+            className="add-review-btn" 
+            onClick={handleAddReviewClick}
+            disabled={!isAuthenticated}
+            title={!isAuthenticated ? "You must be logged in to make a review" : ""}
+          >
+            Add Review
+          </button>
+        </div>
         {reviews.length === 0 ? (
           <p className="no-reviews">No reviews yet</p>
         ) : (
@@ -212,6 +294,71 @@ export default function RestaurantDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Review Modal */}
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h3>Add Review</h3>
+                {restaurant && <p className="review-for">for: {restaurant.name}</p>}
+              </div>
+              <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
+            </div>
+            
+            <form onSubmit={handleSubmitReview} className="review-form">
+              {['taste', 'ingredients', 'ambiance', 'pricing'].map((dimension) => (
+                <div key={dimension} className="form-group">
+                  <div className="rating-input-group">
+                    <label>{dimension.charAt(0).toUpperCase() + dimension.slice(1)}</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={newReview[dimension]}
+                      onChange={(e) => {
+                        let val = parseInt(e.target.value);
+                        if (isNaN(val)) val = 0;
+                        if (val > 100) val = 100;
+                        if (val < 0) val = 0;
+                        setNewReview({...newReview, [dimension]: val});
+                      }}
+                      className="rating-number-input"
+                    />
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={newReview[dimension]}
+                    onChange={(e) =>
+                      setNewReview({...newReview, [dimension]: parseInt(e.target.value)})
+                    }
+                    className="rating-slider"
+                  />
+                </div>
+              ))}
+
+              <div className="form-group">
+                <label htmlFor="comment">Comment (optional)</label>
+                <textarea
+                  id="comment"
+                  value={newReview.comment}
+                  onChange={(e) => setNewReview({...newReview, comment: e.target.value})}
+                  placeholder="Share your thoughts..."
+                  rows="4"
+                />
+              </div>
+
+              <div className="modal-buttons">
+                <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="btn-submit" disabled={submitting}>{submitting ? 'Submitting...' : 'Submit Review'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

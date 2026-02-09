@@ -5,41 +5,56 @@ export default function FAQ() {
   return (
     <div id="faq-root">
       <main className="faq-main">
-        <h1>How Umami Works — FAQs</h1>
-        <p className="lede">Fast, focused reviews and clear guidance — score taste, ingredients, ambiance, and price on a 100-point scale.</p>
-
-        <section className="steps">
-          <div className="step">
-            <h3>1. Rate with detail</h3>
-            <p>Leave granular scores (taste, ingredients, ambiance, pricing) and optional notes so other food lovers can make smarter decisions.</p>
+        <section className="hero-section">
+          <div className="hero-content">
+            <h1>How Umami Works</h1>
+            <p className="lede">A more nuanced and data driven way to rate food.</p>
           </div>
-          <div className="step">
-            <h3>2. Track trends</h3>
-            <p>Each restaurant accumulates monthly and yearly trends so you can see whether it’s improving or slipping.</p>
-          </div>
-          <div className="step">
-            <h3>3. Get recommendations</h3>
-            <p>Our recommendation engine looks at your flavor profile and review history to suggest spots and dishes you’ll love.</p>
+          <div className="hero-visual">
+            <div className="visual-placeholder visual-1"></div>
           </div>
         </section>
 
-        <section className="qa">
-          <h2>Frequently Asked Questions</h2>
-          <details>
-            <summary>Who created this?</summary>
-            <p>This was created by Taiga Chang in September, 2025.</p>
-          </details>
+        <section className="narrative-section">
+          <div className="narrative-content">
+            <div className="step-narrative">
+              <h3>Rate with detail</h3>
+              <p>Leave granular scores across taste, ingredients, ambiance, and pricing. Add optional notes so other food lovers can make smarter decisions based on what matters to them.</p>
+            </div>
+            <div className="visual-right visual-2"></div>
+          </div>
+        </section>
 
-          <details>
-            <summary>What is the purpose of this project?</summary>
-            <p>Taiga Chang is trying to demonstrate his full-stack development skills while learning new frameworks. 
-              Having never worked with MySQL or React, he is trying to put his newly learned skills into practice.</p>
-          </details>
+        <section className="narrative-section narrative-reversed">
+          <div className="narrative-content">
+            <div className="visual-left visual-3"></div>
+            <div className="step-narrative">
+              <h3>Track trends</h3>
+              <p>Each restaurant accumulates monthly and yearly trends so you can see whether it's improving or slipping. Spot patterns and discover hidden gems before they become obvious.</p>
+            </div>
+          </div>
+        </section>
 
-          <details>
-            <summary>Where can I find Taiga Chang?</summary>
-            <p>You can find him at www.linkedin.com/in/taiga-chang-388400262.</p>
-          </details>
+        <section className="narrative-section">
+          <div className="narrative-content">
+            <div className="step-narrative">
+              <h3>Get recommendations</h3>
+              <p>Our recommendation engine looks at your flavor profile and review history to suggest spots and dishes you'll love. Discover restaurants tailored to your taste.</p>
+            </div>
+            <div className="visual-right visual-4"></div>
+          </div>
+        </section>
+
+        <section className="about-section">
+          <div className="about-content">
+            <h2>About this project</h2>
+            <p>Umami was created by Taiga Chang in September, 2025 as a full-stack development showcase. It demonstrates practical implementation of modern web technologies and frameworks.</p>
+            <p>Built with React, Node.js, and MySQL, Umami represents hands-on learning applied to a real problem: making food recommendations more meaningful through nuanced, data-driven ratings.</p>
+            <p>You can find Taiga Chang on <a href="https://www.linkedin.com/in/taiga-chang-388400262" target="_blank" rel="noopener noreferrer">LinkedIn</a>.</p>
+          </div>
+          <div className="about-visual">
+            <div className="visual-placeholder visual-5"></div>
+          </div>
         </section>
 
       </main>

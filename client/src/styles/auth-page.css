@@ -1,103 +1,123 @@
-/* Auth Page Styles - Umami App */
+/* Auth Page Styles */
 #authpage-root {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(4px);
-  font-family: 'Inter', 'Segoe UI', Arial, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
-  color: #333;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
 }
+
 .auth-container {
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 8px 32px rgba(211,47,47,0.08);
-  padding: 2.5rem 2rem 2rem 2rem;
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-lg);
   max-width: 400px;
   width: 100%;
-  margin: 2rem auto;
+  margin: var(--space-md);
 }
+
 .auth-container h2 {
   text-align: center;
-  font-size: 2rem;
-  font-weight: 900;
-  margin-bottom: 1.5rem;
-  background: linear-gradient(135deg, #d32f2f 0%, #f57c00 50%, #fbc02d 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: var(--text-size-h2);
+  font-weight: 700;
+  margin-bottom: var(--space-lg);
+  color: var(--color-text-primary);
 }
+
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: var(--space-md);
 }
+
 .auth-form input {
-  padding: 0.9rem 1rem;
-  border-radius: 6px;
-  border: 1.5px solid #fbc02d;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
   font-size: 1rem;
+  font-family: inherit;
   outline: none;
-  transition: border 0.2s;
+  transition: all var(--transition-base);
+  background: var(--color-white);
+  color: var(--color-text-primary);
 }
+
+.auth-form input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
 .auth-form input:focus {
-  border-color: #d32f2f;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
 }
+
 .auth-form button[type="submit"] {
-  background: linear-gradient(135deg, #d32f2f, #f57c00);
-  color: #fff;
+  background: var(--color-accent);
+  color: var(--color-white);
   border: none;
-  font-weight: 700;
-  font-size: 1.1rem;
-  border-radius: 6px;
-  padding: 0.9rem 0;
-  margin-top: 0.5rem;
-  box-shadow: 0 4px 16px rgba(211, 47, 47, 0.18);
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  margin-top: var(--space-sm);
   cursor: pointer;
-  transition: background 0.3s, transform 0.2s;
+  transition: all var(--transition-fast);
 }
+
 .auth-form button[type="submit"]:hover {
-  background: linear-gradient(135deg, #f57c00, #d32f2f);
-  transform: translateY(-2px) scale(1.03);
+  background: #b71c1c;
 }
+
+.auth-form button[type="submit"]:active {
+  transform: scale(0.98);
+}
+
 .auth-switch {
   text-align: center;
-  margin-top: 1.2rem;
+  margin-top: var(--space-md);
 }
+
 .auth-switch span {
-  color: #444;
-  font-size: 1rem;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
 }
+
 .auth-switch button {
-  background: #fff3e0;
-  color: #d32f2f;
-  border: 1.5px solid #fbc02d;
-  border-radius: 4px;
-  font-weight: 700;
-  margin-left: 8px;
-  padding: 0.5rem 1.2rem;
+  background: transparent;
+  color: var(--color-accent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  margin-left: var(--space-sm);
+  padding: calc(var(--space-xs) * 0.75) var(--space-sm);
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: all var(--transition-fast);
 }
+
 .auth-switch button:hover {
-  background: #ffe0b2;
-  color: #f57c00;
+  background: var(--color-bg-light);
+  border-color: var(--color-accent);
 }
+
 .auth-msg {
   text-align: center;
-  margin-top: 1rem;
-  font-size: 1rem;
-  font-weight: 600;
+  margin-top: var(--space-md);
+  font-size: 0.95rem;
+  font-weight: 500;
 }
+
 .auth-msg.success {
-  color: #388e3c;
+  color: #2e7d32;
 }
+
 .auth-msg.error {
-  color: #d32f2f;
+  color: var(--color-accent);
 }

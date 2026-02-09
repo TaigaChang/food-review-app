@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
+import './styles/design-system.css';
 import Header from './components/Header';
 import Homepage from './pages/home-page.jsx';
 import AuthPage from './pages/auth-page.jsx';

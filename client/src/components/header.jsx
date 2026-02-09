@@ -62,17 +62,16 @@ export default function Header() {
       </div>
       <nav>
         <a href="/restaurant">Restaurants</a>
-        <a href="/faq">FAQ</a>
-      </nav>
-
-      <form className="search-form" onSubmit={handleSubmit} role="search">
-        <div className="search-input-wrapper">
-          <input
-            aria-label="Search restaurants or dishes"
-            placeholder="Search restaurants or dishes"
-            value={q}
-            onChange={(e) => handleSearchInput(e.target.value)}
-            onFocus={() => q.trim() && setShowResults(true)}
+        <a href="/faq">About</a>
+        
+        <form className="search-form" onSubmit={handleSubmit} role="search">
+          <div className="search-input-wrapper">
+            <input
+              aria-label="Search restaurants or dishes"
+              placeholder="Search restaurants or dishes"
+              value={q}
+              onChange={(e) => handleSearchInput(e.target.value)}
+              onFocus={() => q.trim() && setShowResults(true)}
             onBlur={() => setTimeout(() => setShowResults(false), 200)}
           />
           {showResults && searchResults.length > 0 && (
@@ -92,7 +91,8 @@ export default function Header() {
           )}
         </div>
         <button type="submit"></button>
-      </form>
+        </form>
+      </nav>
 
       <div className="auth-buttons">
         {user ? (

@@ -158,6 +158,10 @@ export default function RestaurantPage() {
                         <label htmlFor="thai">Thai</label>
                     </div>
                     <div className="filter-option">
+                        <input type="checkbox" id="korean" onChange={handleCuisineChange} />
+                        <label htmlFor="korean">Korean</label>
+                    </div>
+                    <div className="filter-option">
                         <input type="checkbox" id="indian" onChange={handleCuisineChange} />
                         <label htmlFor="indian">Indian</label>
                     </div>

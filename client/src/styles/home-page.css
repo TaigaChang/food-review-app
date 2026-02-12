@@ -12,10 +12,17 @@
 
 /* Hero Section */
 #homepage-root .hero {
-  background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.5) 100%);
+  background-size: 120%;
+  background-position: center;
+  background-attachment: fixed;
   padding: var(--space-xxl) var(--space-lg);
   text-align: left;
-  color: var(--color-text-primary);
+  color: var(--color-white);
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 #homepage-root .hero h1 {
@@ -29,10 +36,11 @@
 
 #homepage-root .hero p {
   font-size: 1.1rem;
-  color: var(--color-text-secondary);
+  color: var(--color-white);
   margin-bottom: var(--space-lg);
   max-width: 500px;
   line-height: 1.6;
+  opacity: 0.95;
 }
 
 /* CTA Buttons */
@@ -156,14 +164,5 @@
 
   #homepage-root footer {
     padding: var(--space-md);
-  }
-}
-  
-  #homepage-root .cta-btn { 
-    width: 100%; 
-  }
-  
-  #homepage-root .features { 
-    padding: 2rem 1rem; 
   }
 }

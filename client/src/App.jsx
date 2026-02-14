@@ -14,19 +14,22 @@ function App() {
 
   // Show auth modal if URL path is /auth
   const isAuthPath = location.pathname === '/auth';
-
-  // Determine which page to show (use state from location or default to home)
-  const previousPath = location.state?.previousPath || '/';
+  
+  // Determine which page to show (never show auth as a page, always show the background page)
+  let displayPath = location.pathname;
+  if (isAuthPath) {
+    // If on auth path, use the previous path from state, or default to home
+    displayPath = location.state?.previousPath || '/';
+  }
 
   return (
     <>
       <Header />
-      <Routes>
+      <Routes location={isAuthPath ? { pathname: displayPath } : location}>
         <Route path="/" element={<Homepage />} />
         <Route path="/restaurant" element={<RestaurantPage />} />
         <Route path="/restaurant/:id" element={<RestaurantDetailPage />} />
         <Route path="/faq" element={<FAQ />} />
-        <Route path="/auth" element={null} />
       </Routes>
       
       {/* Auth Modal Overlay - renders on top of current content */}

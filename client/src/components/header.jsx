@@ -1,6 +1,7 @@
 import React, { useState, useContext, useRef, useEffect } from "react";
 import "../styles/header.css";
 import { AuthContext } from './auth-check.jsx';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function Header() {
   const [q, setQ] = useState("");
@@ -8,6 +9,8 @@ export default function Header() {
   const [showResults, setShowResults] = useState(false);
   const debounceTimer = useRef(null);
   const { user } = useContext(AuthContext) || {};
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Debounced search function
   const handleSearchInput = (value) => {
@@ -101,9 +104,19 @@ export default function Header() {
           </div>
         ) : (
           <>
-            <a href="/auth?mode=login" className="login-btn">Log in</a>
+            <button 
+              onClick={() => navigate('/auth?mode=login', { state: { previousPath: location.pathname } })}
+              className="login-btn"
+            >
+              Log in
+            </button>
             <span className="divider">/</span>
-            <a href="/auth?mode=signup" className="signup-btn">Sign up</a>
+            <button 
+              onClick={() => navigate('/auth?mode=signup', { state: { previousPath: location.pathname } })}
+              className="signup-btn"
+            >
+              Sign up
+            </button>
           </>
         )}
       </div>

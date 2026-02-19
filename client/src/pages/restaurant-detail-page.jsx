@@ -33,24 +33,7 @@ export default function RestaurantDetailPage() {
         const allReviewsData = await allReviewsRes.json();
         const reviewsWithUsers = allReviewsData.reviews || [];
         
-        const reviewsWithUserInfo = await Promise.all(
-          reviewsWithUsers.map(async (review) => {
-            try {
-              const userRes = await fetch(`/api/auth/user/${review.user_id}`, {
-                credentials: 'include',
-              });
-              if (userRes.ok) {
-                const userData = await userRes.json();
-                return { ...review, user: userData.user };
-              }
-            } catch (e) {
-              console.error(`Failed to fetch user ${review.user_id}:`, e);
-            }
-            return review;
-          })
-        );
-        
-        setReviews(reviewsWithUserInfo);
+        setReviews(reviewsWithUsers);
         setAllTimeAvg(allReviewsData.averages);
       }
     } catch (error) {
@@ -275,7 +258,7 @@ export default function RestaurantDetailPage() {
               <div key={review.id} className="review-card">
                 <div className="review-header">
                   <div className="review-meta">
-                    <span className="review-user">{review.user?.name_first || 'Anonymous'}</span>
+                    <span className="review-user">{review.user_name || 'Anonymous'}</span>
                     <span className="review-date">{new Date(review.created_at).toLocaleDateString()}</span>
                     <span className="review-score">{(
                       (review.taste + review.ingredients + review.ambiance + review.pricing) / 4

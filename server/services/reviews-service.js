@@ -49,10 +49,16 @@ async function getRestaurantReviewHandler(req, res) {
         }
 
         const params = created_after ? [restaurant_id, created_after] : [restaurant_id];
-        const dateFilter = created_after ? 'AND created_at >= ?' : '';
+        const dateFilter = created_after ? 'AND r.created_at >= ?' : '';
 
         const [rows] = await pool.query(
-            `SELECT * FROM reviews WHERE restaurant_id = ? ${dateFilter}`,
+            `SELECT 
+                r.*,
+                CONCAT(u.name_first, ' ', u.name_last) AS user_name
+            FROM reviews r
+            JOIN users u ON r.user_id = u.id
+            WHERE r.restaurant_id = ? ${dateFilter}
+            ORDER BY r.created_at DESC`,
             params
         );
 

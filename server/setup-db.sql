@@ -1,7 +1,114 @@
--- Clear existing data (maintain referential integrity)
-DELETE FROM reviews;
-DELETE FROM restaurants;
-DELETE FROM users;
+-- Database setup: Drop old schema, recreate with new 0-5 scale, load seed data
+
+-- Drop old tables (in reverse dependency order)
+DROP TABLE IF EXISTS monthly_aggregated_ratings;
+DROP TABLE IF EXISTS aggregated_ratings;
+DROP TABLE IF EXISTS reviews;
+DROP TABLE IF EXISTS restaurants;
+DROP TABLE IF EXISTS users;
+
+-- Create users table
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name_first VARCHAR(100) NOT NULL,
+    name_last VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE = InnoDB;
+
+CREATE INDEX idx_users_email ON users(email);
+
+-- Create restaurants table
+CREATE TABLE restaurants (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    cuisine VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE = InnoDB;
+
+CREATE INDEX idx_restaurants_cuisine ON restaurants(cuisine);
+
+-- Create reviews table with new 0-5 scale
+CREATE TABLE reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    restaurant_id INT NOT NULL,
+    taste DECIMAL(3, 1) NOT NULL CHECK (taste BETWEEN 0 AND 5),
+    service DECIMAL(3, 1) NOT NULL CHECK (service BETWEEN 0 AND 5),
+    ambiance DECIMAL(3, 1) NOT NULL CHECK (ambiance BETWEEN 0 AND 5),
+    price DECIMAL(3, 1) NOT NULL CHECK (price BETWEEN 0 AND 5),
+    total DECIMAL(3, 1) GENERATED ALWAYS AS (ROUND(taste * 0.6 + service * 0.15 + ambiance * 0.15 + price * 0.1, 1)) STORED,
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+CREATE INDEX idx_reviews_restaurant ON reviews(restaurant_id, created_at);
+CREATE INDEX idx_reviews_user ON reviews(user_id, created_at);
+
+-- Create aggregated_ratings table
+CREATE TABLE aggregated_ratings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    restaurant_id INT NOT NULL UNIQUE,
+    avg_taste_alltime DECIMAL(3, 2),
+    avg_service_alltime DECIMAL(3, 2),
+    avg_ambiance_alltime DECIMAL(3, 2),
+    avg_price_alltime DECIMAL(3, 2),
+    avg_overall_alltime DECIMAL(3, 2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+-- Create monthly_aggregated_ratings table
+CREATE TABLE monthly_aggregated_ratings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    restaurant_id INT NOT NULL,
+    month_index INT NOT NULL COMMENT '1-60 months back from now',
+    month_start DATE NOT NULL,
+    avg_taste DECIMAL(3, 2),
+    avg_service DECIMAL(3, 2),
+    avg_ambiance DECIMAL(3, 2),
+    avg_price DECIMAL(3, 2),
+    avg_overall DECIMAL(3, 2),
+    review_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_restaurant_month (restaurant_id, month_index),
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+CREATE INDEX idx_monthly_restaurant ON monthly_aggregated_ratings(restaurant_id);
+
+-- Create views for common queries
+CREATE OR REPLACE VIEW restaurant_ratings_month AS
+SELECT 
+    restaurant_id,
+    AVG(taste) AS avg_taste,
+    AVG(service) AS avg_service,
+    AVG(ambiance) AS avg_ambiance,
+    AVG(price) AS avg_price,
+    AVG(total) AS avg_total,
+    COUNT(*) AS review_count
+FROM reviews
+WHERE created_at >= (NOW() - INTERVAL 1 MONTH)
+GROUP BY restaurant_id;
+
+CREATE OR REPLACE VIEW restaurant_ratings_year AS
+SELECT 
+    restaurant_id,
+    AVG(taste) AS avg_taste,
+    AVG(service) AS avg_service,
+    AVG(ambiance) AS avg_ambiance,
+    AVG(price) AS avg_price,
+    AVG(total) AS avg_total,
+    COUNT(*) AS review_count
+FROM reviews
+WHERE created_at >= (NOW() - INTERVAL 1 YEAR)
+GROUP BY restaurant_id;
 
 -- Insert test users
 INSERT INTO users (name_first, name_last, email, password) VALUES

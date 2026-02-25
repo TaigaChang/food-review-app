@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Search, Menu, X } from "lucide-react"
+import { Search, Menu, X, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { AuthModal } from "@/components/auth-modal"
@@ -14,12 +14,34 @@ const navLinks = [
   { href: "/about", label: "About" },
 ]
 
+interface User {
+  id: number
+  email: string
+  name_first: string
+  name_last: string
+}
+
 export function SiteHeader() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
   const [authMode, setAuthMode] = useState<"login" | "signup">("login")
+  const [user, setUser] = useState<User | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    // Check if user is logged in from localStorage
+    const storedUser = localStorage.getItem("user")
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser))
+      } catch (e) {
+        console.error("Failed to parse stored user:", e)
+      }
+    }
+  }, [])
 
   const openLogin = () => {
     setAuthMode("login")
@@ -29,6 +51,17 @@ export function SiteHeader() {
   const openSignup = () => {
     setAuthMode("signup")
     setAuthOpen(true)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken")
+    localStorage.removeItem("user")
+    setUser(null)
+  }
+
+  // Don't render until mounted to avoid hydration mismatch
+  if (!mounted) {
+    return null
   }
 
   return (
@@ -91,14 +124,30 @@ export function SiteHeader() {
               )}
             </div>
 
-            {/* Auth buttons */}
+            {/* Auth buttons or user info */}
             <div className="hidden items-center gap-2 md:flex">
-              <Button variant="ghost" size="sm" onClick={openLogin} className="text-muted-foreground hover:text-foreground">
-                Log in
-              </Button>
-              <Button size="sm" onClick={openSignup}>
-                Sign up
-              </Button>
+              {user ? (
+                <>
+                  <div className="text-sm font-medium text-foreground">{user.email}</div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <LogOut className="size-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="ghost" size="sm" onClick={openLogin} className="text-muted-foreground hover:text-foreground">
+                    Log in
+                  </Button>
+                  <Button size="sm" onClick={openSignup}>
+                    Sign up
+                  </Button>
+                </>
+              )}
             </div>
 
             {/* Mobile menu toggle */}
@@ -135,12 +184,30 @@ export function SiteHeader() {
               ))}
             </nav>
             <div className="mt-4 flex items-center gap-2 border-t border-border pt-4">
-              <Button variant="outline" size="sm" className="flex-1" onClick={() => { openLogin(); setMobileMenuOpen(false) }}>
-                Log in
-              </Button>
-              <Button size="sm" className="flex-1" onClick={() => { openSignup(); setMobileMenuOpen(false) }}>
-                Sign up
-              </Button>
+              {user ? (
+                <>
+                  <div className="flex-1 text-sm font-medium text-foreground">{user.email}</div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      handleLogout()
+                      setMobileMenuOpen(false)
+                    }}
+                  >
+                    <LogOut className="size-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => { openLogin(); setMobileMenuOpen(false) }}>
+                    Log in
+                  </Button>
+                  <Button size="sm" className="flex-1" onClick={() => { openSignup(); setMobileMenuOpen(false) }}>
+                    Sign up
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         )}

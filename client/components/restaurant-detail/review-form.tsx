@@ -13,30 +13,34 @@ import type { Review } from "@/lib/data"
 
 interface ReviewFormProps {
   restaurantName: string
+  restaurantId?: number
   reviews: Review[]
+  isDialog?: boolean
+  onClose?: () => void
+  onReviewSubmitted?: () => void
 }
 
 const categories = Object.keys(CATEGORY_LABELS) as (keyof CategoryScores)[]
 
-export function ReviewForm({ restaurantName, reviews }: ReviewFormProps) {
+export function ReviewForm({ restaurantName, restaurantId, reviews, isDialog = false, onClose, onReviewSubmitted }: ReviewFormProps) {
   const [scores, setScores] = useState<CategoryScores>({
-    taste: 0,
-    ambiance: 0,
-    service: 0,
-    price: 0,
+    taste: 2.5,
+    ambiance: 2.5,
+    service: 2.5,
+    price: 2.5,
   })
   const [activeCategory, setActiveCategory] = useState<keyof CategoryScores | null>(null)
   const [text, setText] = useState("")
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const weightedScore = useMemo(() => {
-    const allSet = Object.values(scores).every((v) => v > 0)
-    if (!allSet) return null
     return computeWeightedScore(scores)
   }, [scores])
 
   const similarReviews = useMemo(() => {
-    if (!activeCategory || scores[activeCategory] === 0) return []
+    if (!activeCategory) return []
     const userScore = scores[activeCategory]
     return reviews
       .filter((r) => Math.abs(r.scores[activeCategory] - userScore) <= 0.5)
@@ -48,29 +52,79 @@ export function ReviewForm({ restaurantName, reviews }: ReviewFormProps) {
     setActiveCategory(category)
   }
 
-  const allScoresSet = Object.values(scores).every((v) => v > 0)
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!allScoresSet) return
-    setSubmitted(true)
-    setTimeout(() => {
-      setSubmitted(false)
-      setScores({ taste: 0, ambiance: 0, service: 0, price: 0 })
-      setText("")
-      setActiveCategory(null)
-    }, 3000)
+    if (!restaurantId) return
+    
+    setLoading(true)
+    setError(null)
+
+    try {
+      const token = localStorage.getItem("authToken")
+      if (!token) {
+        setError("You must be logged in to submit a review")
+        setLoading(false)
+        return
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          restaurant_id: restaurantId,
+          taste: scores.taste,
+          service: scores.service,
+          ambiance: scores.ambiance,
+          price: scores.price,
+          comment: text,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to submit review")
+      }
+
+      setSubmitted(true)
+      onReviewSubmitted?.()
+      
+      setTimeout(() => {
+        setSubmitted(false)
+        setScores({ taste: 2.5, ambiance: 2.5, service: 2.5, price: 2.5 })
+        setText("")
+        setActiveCategory(null)
+        setLoading(false)
+        if (isDialog) {
+          onClose?.()
+        }
+      }, isDialog ? 1500 : 3000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to submit review")
+      setLoading(false)
+    }
   }
 
   return (
-    <div>
-      <h2 className="font-serif text-2xl text-foreground">Write a Review</h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Share your experience at {restaurantName}
-      </p>
+    <div className="space-y-6">
+      {!isDialog && (
+        <>
+          <h2 className="font-serif text-2xl text-foreground">Write a Review</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Share your experience at {restaurantName}
+          </p>
+        </>
+      )}
+
+      {error && (
+        <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive text-sm">
+          {error}
+        </div>
+      )}
 
       {submitted ? (
-        <div className="mt-6 rounded-lg border border-accent bg-accent/10 p-6 text-center">
+        <div className="rounded-lg border border-accent bg-accent/10 p-6 text-center">
           <p className="font-medium text-foreground">
             Thank you for your review!
           </p>
@@ -79,7 +133,7 @@ export function ReviewForm({ restaurantName, reviews }: ReviewFormProps) {
           </p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-6">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           {/* Category scores */}
           <div className="flex flex-col gap-5">
             {categories.map((cat) => {
@@ -93,9 +147,44 @@ export function ReviewForm({ restaurantName, reviews }: ReviewFormProps) {
                         ({weight}% weight)
                       </span>
                     </label>
-                    <span className="text-sm font-semibold tabular-nums text-foreground min-w-[2.5rem] text-right">
-                      {scores[cat] > 0 ? scores[cat].toFixed(1) : "---"}
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0.5"
+                        max="5"
+                        step="0.1"
+                        value={scores[cat].toFixed(1)}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value)
+                          if (val >= 0.5 && val <= 5) {
+                            handleScoreChange(cat, val)
+                          }
+                        }}
+                        className="w-12 px-2 py-1 text-sm font-semibold tabular-nums text-right rounded border border-input bg-background text-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <div className="flex flex-col gap-0.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newVal = Math.min(5, scores[cat] + 0.1)
+                            handleScoreChange(cat, parseFloat(newVal.toFixed(1)))
+                          }}
+                          className="h-4 w-5 rounded-t border border-input bg-secondary hover:bg-secondary/80 transition-colors flex items-center justify-center text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newVal = Math.max(0.5, scores[cat] - 0.1)
+                            handleScoreChange(cat, parseFloat(newVal.toFixed(1)))
+                          }}
+                          className="h-4 w-5 rounded-b border border-input bg-secondary hover:bg-secondary/80 transition-colors flex items-center justify-center text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          ▼
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   <input
                     type="range"
@@ -120,17 +209,15 @@ export function ReviewForm({ restaurantName, reviews }: ReviewFormProps) {
           </div>
 
           {/* Weighted total preview */}
-          {weightedScore !== null && (
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-secondary/50 px-4 py-3">
-              <span className="text-sm text-muted-foreground">
-                Weighted Score:
-              </span>
-              <span className="text-2xl font-semibold text-primary tabular-nums">
-                {weightedScore.toFixed(1)}
-              </span>
-              <span className="text-sm text-muted-foreground">/ 5.0</span>
-            </div>
-          )}
+          <div className="flex items-center gap-3 rounded-lg border border-border bg-secondary/50 px-4 py-3">
+            <span className="text-sm text-muted-foreground">
+              Weighted Score:
+            </span>
+            <span className="text-2xl font-semibold text-primary tabular-nums">
+              {weightedScore.toFixed(1)}
+            </span>
+            <span className="text-sm text-muted-foreground">/ 5.0</span>
+          </div>
 
           {/* Similar reviews for active category */}
           {activeCategory && similarReviews.length > 0 && (
@@ -158,7 +245,7 @@ export function ReviewForm({ restaurantName, reviews }: ReviewFormProps) {
                         </span>
                         <span className="text-xs text-muted-foreground tabular-nums">
                           {CATEGORY_LABELS[activeCategory]}:{" "}
-                          {review.scores[activeCategory].toFixed(1)}
+                          {typeof review.scores[activeCategory] === 'number' ? review.scores[activeCategory].toFixed(1) : "N/A"}
                         </span>
                       </div>
                       <p className="mt-0.5 text-muted-foreground line-clamp-2">
@@ -188,8 +275,8 @@ export function ReviewForm({ restaurantName, reviews }: ReviewFormProps) {
             />
           </div>
 
-          <Button type="submit" disabled={!allScoresSet} className="self-start">
-            Submit Review
+          <Button type="submit" disabled={loading} className="self-start">
+            {loading ? "Submitting..." : "Submit Review"}
           </Button>
         </form>
       )}

@@ -15,6 +15,8 @@ interface ReviewFormProps {
   restaurantName: string
   restaurantId?: number
   reviews: Review[]
+  userId?: number | null
+  userReviews?: Review[]
   isDialog?: boolean
   onClose?: () => void
   onReviewSubmitted?: () => void
@@ -22,7 +24,7 @@ interface ReviewFormProps {
 
 const categories = Object.keys(CATEGORY_LABELS) as (keyof CategoryScores)[]
 
-export function ReviewForm({ restaurantName, restaurantId, reviews, isDialog = false, onClose, onReviewSubmitted }: ReviewFormProps) {
+export function ReviewForm({ restaurantName, restaurantId, reviews, userId, userReviews = [], isDialog = false, onClose, onReviewSubmitted }: ReviewFormProps) {
   const [scores, setScores] = useState<CategoryScores>({
     taste: 2.5,
     ambiance: 2.5,
@@ -40,12 +42,14 @@ export function ReviewForm({ restaurantName, restaurantId, reviews, isDialog = f
   }, [scores])
 
   const similarReviews = useMemo(() => {
-    if (!activeCategory) return []
+    if (!activeCategory || !userId || userReviews.length === 0) return []
     const userScore = scores[activeCategory]
-    return reviews
-      .filter((r) => Math.abs(r.scores[activeCategory] - userScore) <= 0.5)
+    
+    return userReviews
+      .filter((r) => r.restaurantId !== restaurantId && Math.abs(r.scores[activeCategory] - userScore) <= 0.5)
+      .sort((a, b) => Math.abs(a.scores[activeCategory] - userScore) - Math.abs(b.scores[activeCategory] - userScore))
       .slice(0, 3)
-  }, [activeCategory, scores, reviews])
+  }, [activeCategory, scores, userReviews, userId, restaurantId])
 
   const handleScoreChange = (category: keyof CategoryScores, value: number) => {
     setScores((prev) => ({ ...prev, [category]: value }))
@@ -223,11 +227,11 @@ export function ReviewForm({ restaurantName, restaurantId, reviews, isDialog = f
           {activeCategory && similarReviews.length > 0 && (
             <div className="rounded-lg border border-border bg-card p-4">
               <p className="text-xs font-medium text-muted-foreground mb-3">
-                Reviews with similar{" "}
+                Your similar{" "}
                 <span className="text-foreground">
                   {CATEGORY_LABELS[activeCategory]}
                 </span>{" "}
-                scores
+                ratings from other restaurants
               </p>
               <div className="flex flex-col gap-3">
                 {similarReviews.map((review) => (

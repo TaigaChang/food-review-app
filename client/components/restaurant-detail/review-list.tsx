@@ -1,19 +1,31 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import type { Review } from "@/lib/data"
 import { CATEGORY_LABELS, type CategoryScores } from "@/lib/data"
 
 interface ReviewListProps {
   reviews: Review[]
+  onWriteReviewClick?: () => void
+  isLoggedIn?: boolean
 }
 
 const categories = Object.keys(CATEGORY_LABELS) as (keyof CategoryScores)[]
 
-export function ReviewList({ reviews }: ReviewListProps) {
+export function ReviewList({ reviews, onWriteReviewClick, isLoggedIn = false }: ReviewListProps) {
   return (
     <div>
-      <h2 className="font-serif text-2xl text-foreground">
-        Reviews ({reviews.length})
-      </h2>
+      <div className="flex items-center justify-between">
+        <h2 className="font-serif text-2xl text-foreground">
+          Reviews ({reviews.length})
+        </h2>
+        <Button
+          onClick={onWriteReviewClick}
+          disabled={!isLoggedIn}
+          title={isLoggedIn ? "Write a review" : "Log in to write a review"}
+        >
+          Write a Review
+        </Button>
+      </div>
 
       <div className="mt-6 flex flex-col gap-6">
         {reviews.map((review) => (

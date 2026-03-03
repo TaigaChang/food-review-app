@@ -6,86 +6,148 @@ import pool from '../db.js';
  */
 async function updateAggregatedRatings(restaurantId) {
     try {
-        // Get current timestamp for period calculations
         const now = new Date();
-        const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        const oneMonthMs = 30 * 24 * 60 * 60 * 1000;
+        const oneDayMs = 24 * 60 * 60 * 1000;
 
         // Query 1: All-time averages
         const [allTimeData] = await pool.query(
             `SELECT
                 COUNT(*) as count,
                 AVG(taste) as avg_taste,
-                AVG(ingredients) as avg_ingredients,
+                AVG(service) as avg_service,
                 AVG(ambiance) as avg_ambiance,
-                AVG(pricing) as avg_pricing,
-                ROUND((AVG(taste) + AVG(ingredients) + AVG(ambiance) + AVG(pricing)) / 4, 2) as avg_overall
+                AVG(price) as avg_price,
+                AVG(total) as avg_total
             FROM reviews
             WHERE restaurant_id = ?`,
             [restaurantId]
         );
 
-        // Query 2: 1-year averages
-        const [oneYearData] = await pool.query(
-            `SELECT
-                COUNT(*) as count,
-                AVG(taste) as avg_taste,
-                AVG(ingredients) as avg_ingredients,
-                AVG(ambiance) as avg_ambiance,
-                AVG(pricing) as avg_pricing,
-                ROUND((AVG(taste) + AVG(ingredients) + AVG(ambiance) + AVG(pricing)) / 4, 2) as avg_overall
-            FROM reviews
-            WHERE restaurant_id = ? AND created_at >= ?`,
-            [restaurantId, oneYearAgo]
-        );
-
-        // Query 3: 1-month averages
-        const [oneMonthData] = await pool.query(
-            `SELECT
-                COUNT(*) as count,
-                AVG(taste) as avg_taste,
-                AVG(ingredients) as avg_ingredients,
-                AVG(ambiance) as avg_ambiance,
-                AVG(pricing) as avg_pricing,
-                ROUND((AVG(taste) + AVG(ingredients) + AVG(ambiance) + AVG(pricing)) / 4, 2) as avg_overall
-            FROM reviews
-            WHERE restaurant_id = ? AND created_at >= ?`,
-            [restaurantId, oneMonthAgo]
-        );
-
         const allTime = allTimeData[0];
-        const oneYear = oneYearData[0];
-        const oneMonth = oneMonthData[0];
 
-        // Upsert aggregated_ratings
+        // Query 2: Loop through 60 months for graphing data
+        const monthlyData = [];
+        for (let months = 1; months <= 60; months++) {
+            const startDate = new Date(now.getTime() - months * oneMonthMs);
+
+            const [monthResult] = await pool.query(
+                `SELECT
+                    COUNT(*) as count,
+                    AVG(taste) as avg_taste,
+                    AVG(service) as avg_service,
+                    AVG(ambiance) as avg_ambiance,
+                    AVG(price) as avg_price,
+                    AVG(total) as avg_total
+                FROM reviews
+                WHERE restaurant_id = ? AND created_at >= ?`,
+                [restaurantId, startDate]
+            );
+
+            const monthData = {
+                restaurant_id: restaurantId,
+                month_index: months,
+                month_start: startDate,
+                ...monthResult[0]
+            };
+
+            monthlyData.push(monthData);
+        }
+
+        // Query 3: Loop through 30 days for daily graphing data
+        const dailyData = [];
+        for (let days = 1; days <= 30; days++) {
+            const startDate = new Date(now.getTime() - days * oneDayMs);
+
+            const [dayResult] = await pool.query(
+                `SELECT
+                    COUNT(*) as count,
+                    AVG(taste) as avg_taste,
+                    AVG(service) as avg_service,
+                    AVG(ambiance) as avg_ambiance,
+                    AVG(price) as avg_price,
+                    AVG(total) as avg_total
+                FROM reviews
+                WHERE restaurant_id = ? AND created_at >= ?`,
+                [restaurantId, startDate]
+            );
+
+            const dayData = {
+                restaurant_id: restaurantId,
+                day_index: days,
+                day_start: startDate,
+                ...dayResult[0]
+            };
+
+            dailyData.push(dayData);
+        }
+
+        // Upsert aggregated_ratings (all-time only)
         await pool.query(
             `INSERT INTO aggregated_ratings (
                 restaurant_id,
-                avg_taste_alltime, avg_ingredients_alltime, avg_ambiance_alltime, avg_pricing_alltime, avg_overall_alltime,
-                avg_taste_1year, avg_ingredients_1year, avg_ambiance_1year, avg_pricing_1year, avg_overall_1year,
-                avg_taste_1month, avg_ingredients_1month, avg_ambiance_1month, avg_pricing_1month, avg_overall_1month,
-                review_count_alltime, review_count_1year, review_count_1month
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                avg_taste_alltime, avg_service_alltime, avg_ambiance_alltime, avg_price_alltime, avg_overall_alltime
+            ) VALUES (?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
-                avg_taste_alltime = ?, avg_ingredients_alltime = ?, avg_ambiance_alltime = ?, avg_pricing_alltime = ?, avg_overall_alltime = ?,
-                avg_taste_1year = ?, avg_ingredients_1year = ?, avg_ambiance_1year = ?, avg_pricing_1year = ?, avg_overall_1year = ?,
-                avg_taste_1month = ?, avg_ingredients_1month = ?, avg_ambiance_1month = ?, avg_pricing_1month = ?, avg_overall_1month = ?,
-                review_count_alltime = ?, review_count_1year = ?, review_count_1month = ?,
-                last_updated = CURRENT_TIMESTAMP`,
+                avg_taste_alltime = VALUES(avg_taste_alltime),
+                avg_service_alltime = VALUES(avg_service_alltime),
+                avg_ambiance_alltime = VALUES(avg_ambiance_alltime),
+                avg_price_alltime = VALUES(avg_price_alltime),
+                avg_overall_alltime = VALUES(avg_overall_alltime),
+                updated_at = CURRENT_TIMESTAMP`,
             [
-                // INSERT values
                 restaurantId,
-                allTime.avg_taste, allTime.avg_ingredients, allTime.avg_ambiance, allTime.avg_pricing, allTime.avg_overall,
-                oneYear.avg_taste, oneYear.avg_ingredients, oneYear.avg_ambiance, oneYear.avg_pricing, oneYear.avg_overall,
-                oneMonth.avg_taste, oneMonth.avg_ingredients, oneMonth.avg_ambiance, oneMonth.avg_pricing, oneMonth.avg_overall,
-                allTime.count, oneYear.count, oneMonth.count,
-                // UPDATE values (duplicates)
-                allTime.avg_taste, allTime.avg_ingredients, allTime.avg_ambiance, allTime.avg_pricing, allTime.avg_overall,
-                oneYear.avg_taste, oneYear.avg_ingredients, oneYear.avg_ambiance, oneYear.avg_pricing, oneYear.avg_overall,
-                oneMonth.avg_taste, oneMonth.avg_ingredients, oneMonth.avg_ambiance, oneMonth.avg_pricing, oneMonth.avg_overall,
-                allTime.count, oneYear.count, oneMonth.count
+                allTime.avg_taste, allTime.avg_service, allTime.avg_ambiance, allTime.avg_price, allTime.avg_total
             ]
         );
+
+        // Save all 60 months to monthly_aggregated_ratings
+        for (const month of monthlyData) {
+            await pool.query(
+                `INSERT INTO monthly_aggregated_ratings (
+                    restaurant_id, month_index, month_start,
+                    avg_taste, avg_service, avg_ambiance, avg_price, avg_overall, review_count
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                    avg_taste = VALUES(avg_taste),
+                    avg_service = VALUES(avg_service),
+                    avg_ambiance = VALUES(avg_ambiance),
+                    avg_price = VALUES(avg_price),
+                    avg_overall = VALUES(avg_overall),
+                    review_count = VALUES(review_count)`,
+                [
+                    month.restaurant_id,
+                    month.month_index,
+                    month.month_start,
+                    month.avg_taste, month.avg_service, month.avg_ambiance, month.avg_price, month.avg_total,
+                    month.count
+                ]
+            );
+        }
+
+        // Save all 30 days to daily_aggregated_ratings
+        for (const day of dailyData) {
+            await pool.query(
+                `INSERT INTO daily_aggregated_ratings (
+                    restaurant_id, day_index, day_start,
+                    avg_taste, avg_service, avg_ambiance, avg_price, avg_overall, review_count
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                    avg_taste = VALUES(avg_taste),
+                    avg_service = VALUES(avg_service),
+                    avg_ambiance = VALUES(avg_ambiance),
+                    avg_price = VALUES(avg_price),
+                    avg_overall = VALUES(avg_overall),
+                    review_count = VALUES(review_count)`,
+                [
+                    day.restaurant_id,
+                    day.day_index,
+                    day.day_start,
+                    day.avg_taste, day.avg_service, day.avg_ambiance, day.avg_price, day.avg_total,
+                    day.count
+                ]
+            );
+        }
 
         console.log(`✓ Updated aggregated ratings for restaurant ${restaurantId}`);
     } catch (error) {
@@ -108,14 +170,64 @@ async function getAggregatedRatings(restaurantId) {
             return null;
         }
 
-        return rows[0];
+        const row = rows[0];
+        // Map database column names to match frontend expectations
+        // Convert string values to numbers
+        return {
+            avg_taste: Number(row.avg_taste_alltime),
+            avg_service: Number(row.avg_service_alltime),
+            avg_ambiance: Number(row.avg_ambiance_alltime),
+            avg_price: Number(row.avg_price_alltime),
+            avg_overall_alltime: Number(row.avg_overall_alltime),
+            review_count: Number(row.review_count || 0)
+        };
     } catch (error) {
         console.error('Error fetching aggregated ratings:', error);
         throw error;
     }
 }
 
+/**
+ * Get 60 months of aggregated data for graphing
+ */
+async function getMonthlyAggregatedRatings(restaurantId) {
+    try {
+        const [rows] = await pool.query(
+            `SELECT * FROM monthly_aggregated_ratings 
+            WHERE restaurant_id = ? 
+            ORDER BY month_index ASC`,
+            [restaurantId]
+        );
+
+        return rows;
+    } catch (error) {
+        console.error('Error fetching monthly aggregated ratings:', error);
+        throw error;
+    }
+}
+
+/**
+ * Get 30 days of aggregated data for graphing
+ */
+async function getDailyAggregatedRatings(restaurantId) {
+    try {
+        const [rows] = await pool.query(
+            `SELECT * FROM daily_aggregated_ratings 
+            WHERE restaurant_id = ? 
+            ORDER BY day_index ASC`,
+            [restaurantId]
+        );
+
+        return rows;
+    } catch (error) {
+        console.error('Error fetching daily aggregated ratings:', error);
+        throw error;
+    }
+}
+
 export {
     updateAggregatedRatings,
-    getAggregatedRatings
+    getAggregatedRatings,
+    getMonthlyAggregatedRatings,
+    getDailyAggregatedRatings
 };

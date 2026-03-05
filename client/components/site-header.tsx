@@ -53,10 +53,26 @@ export function SiteHeader() {
     setAuthOpen(true)
   }
 
+  const handleAuthOpenChange = (open: boolean) => {
+    setAuthOpen(open)
+    // When modal closes, check if user logged in by reading localStorage
+    if (!open) {
+      const storedUser = localStorage.getItem("user")
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser))
+        } catch (e) {
+          console.error("Failed to parse stored user:", e)
+        }
+      }
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem("authToken")
     localStorage.removeItem("user")
     setUser(null)
+    window.location.reload()
   }
 
   // Don't render until mounted to avoid hydration mismatch
@@ -213,7 +229,7 @@ export function SiteHeader() {
         )}
       </header>
 
-      <AuthModal open={authOpen} onOpenChange={setAuthOpen} mode={authMode} onModeChange={setAuthMode} />
+      <AuthModal open={authOpen} onOpenChange={handleAuthOpenChange} mode={authMode} onModeChange={setAuthMode} />
     </>
   )
 }

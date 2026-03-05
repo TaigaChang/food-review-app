@@ -23,16 +23,57 @@ export function AuthModal({ open, onOpenChange, mode, onModeChange }: AuthModalP
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const isLogin = mode === "login"
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // placeholder submit
-    onOpenChange(false)
-    setEmail("")
-    setPassword("")
-    setName("")
+    setError("")
+    setLoading(true)
+
+    try {
+      const endpoint = isLogin ? "/auth/login" : "/auth/signup"
+      const body = isLogin
+        ? { email, password }
+        : { email, password, name_first: name.split(" ")[0], name_last: name.split(" ").slice(1).join(" ") || "" }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        setError(data.message || "Authentication failed")
+        setLoading(false)
+        return
+      }
+
+      const data = await response.json()
+      const token = data.token
+
+      // Store token in localStorage
+      localStorage.setItem("authToken", token)
+      localStorage.setItem("user", JSON.stringify(data.user))
+
+      console.log("Login successful:", data.user)
+
+      // Reset form and close modal
+      onOpenChange(false)
+      setEmail("")
+      setPassword("")
+      setName("")
+      setError("")
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "An error occurred"
+      console.error("Login error:", errorMsg)
+      setError(errorMsg)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -89,8 +130,10 @@ export function AuthModal({ open, onOpenChange, mode, onModeChange }: AuthModalP
             />
           </div>
 
-          <Button type="submit" className="mt-2 w-full">
-            {isLogin ? "Log in" : "Create account"}
+          {error && <div className="text-sm text-red-500">{error}</div>}
+
+          <Button type="submit" className="mt-2 w-full" disabled={loading}>
+            {loading ? "Loading..." : isLogin ? "Log in" : "Create account"}
           </Button>
         </form>
 

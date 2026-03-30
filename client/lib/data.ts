@@ -13,6 +13,8 @@ export interface Review {
   rating: number
   date: string
   text: string
+  restaurantId?: number
+  restaurantName?: string
 }
 
 export interface RatingHistoryPoint {
@@ -29,7 +31,8 @@ export interface Restaurant {
   rating: number
   reviewCount: number
   image: string
-  description: string
+  description?: string
+  about?: string
   address: string
   hours: string
   phone: string

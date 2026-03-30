@@ -86,18 +86,19 @@ async function updateAggregatedRatings(restaurantId) {
         await pool.query(
             `INSERT INTO aggregated_ratings (
                 restaurant_id,
-                avg_taste_alltime, avg_service_alltime, avg_ambiance_alltime, avg_price_alltime, avg_overall_alltime
-            ) VALUES (?, ?, ?, ?, ?, ?)
+                avg_taste_alltime, avg_service_alltime, avg_ambiance_alltime, avg_price_alltime, avg_overall_alltime, review_count
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 avg_taste_alltime = VALUES(avg_taste_alltime),
                 avg_service_alltime = VALUES(avg_service_alltime),
                 avg_ambiance_alltime = VALUES(avg_ambiance_alltime),
                 avg_price_alltime = VALUES(avg_price_alltime),
                 avg_overall_alltime = VALUES(avg_overall_alltime),
+                review_count = VALUES(review_count),
                 updated_at = CURRENT_TIMESTAMP`,
             [
                 restaurantId,
-                allTime.avg_taste, allTime.avg_service, allTime.avg_ambiance, allTime.avg_price, allTime.avg_total
+                allTime.avg_taste, allTime.avg_service, allTime.avg_ambiance, allTime.avg_price, allTime.avg_total, allTime.count
             ]
         );
 

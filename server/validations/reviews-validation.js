@@ -12,13 +12,13 @@ Validations["restaurant_id"] = async function(val) {
 Validations["taste"] = async function(val) {
     return isScore(val);
 }
-Validations["ingredients"] = async function(val) {
+Validations["service"] = async function(val) {
     return isScore(val);
 }
 Validations["ambiance"] = async function(val) {
     return isScore(val);
 }
-Validations["pricing"] = async function(val) {
+Validations["price"] = async function(val) {
     return isScore(val);
 }
 
@@ -35,7 +35,8 @@ Validations["created_at"] = async function(val) {
 }
 
 function isScore(val) {
-    return Number.isInteger(val) && val >= 0 && val <= 100;
+    // Allow numbers between 0 and 5, with up to 1 decimal place
+    return typeof val === "number" && val >= 0 && val <= 5;
 }
 
 export default Validations;

@@ -10,10 +10,10 @@ import reviewsRouter from './routes/reviews-router.js';
 
 dotenv.config();
 const app = express();
-// Allow the Vite dev server (http://localhost:5173) to make credentialed requests
+// Allow the Next.js dev server (http://localhost:3001) to make credentialed requests
 // during development. In production this should be restricted to your app origin.
 const corsOptions = {
-  origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  origin: process.env.CLIENT_ORIGIN || 'http://localhost:3001',
   credentials: true,
 };
 app.use(cors(corsOptions));

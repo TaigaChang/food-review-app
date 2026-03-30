@@ -15,8 +15,16 @@ import jwt from "jsonwebtoken";
  */
 export function authenticateToken(req, res, next) {
 	try {
-		// Read token exclusively from cookie (cookie-parser required)
-		const token = req.cookies?.token;
+		// Read token from Authorization header (Bearer token) or cookie
+		let token = req.cookies?.token;
+		
+		// Check for Authorization header with Bearer token
+		if (!token && req.headers.authorization) {
+			const authHeader = req.headers.authorization;
+			if (authHeader.startsWith('Bearer ')) {
+				token = authHeader.slice(7); // Remove "Bearer " prefix
+			}
+		}
 
 		if (!token) {
 			return res.status(401).json({ message: "Unauthorized: token required" });
@@ -31,6 +39,7 @@ export function authenticateToken(req, res, next) {
 
 		jwt.verify(token, secret, (err, payload) => {
 			if (err) {
+				console.error("Token verification failed:", err.message, "Token:", token.substring(0, 20) + "...");
 				return res.status(403).json({ message: "Forbidden: invalid token" });
 			}
 

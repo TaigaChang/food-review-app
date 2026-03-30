@@ -17,7 +17,7 @@ const steps = [
     icon: BookOpen,
     title: "Track",
     description:
-      "Keep a personal food journal. Save restaurants, revisit favorites, and build your own dining history.",
+      "See how a restaurant changes over time by checking their ratings over time.",
   },
 ]
 

@@ -9,6 +9,7 @@ import authenticateToken from "./middleware/authenticate_token.js";
 import authRoutes from "./routes/auth-router.js";
 import restaurantsRouter from './routes/restaurants-router.js';
 import reviewsRouter from './routes/reviews-router.js';
+import pool from './db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === "production";
@@ -34,6 +35,25 @@ app.use(cookieParser());
 app.use((req, res, next) => {
   // console.log(`${req.method} ${req.url}`);
   next();
+});
+
+// Diagnostic endpoint to test DB  
+app.get("/api/test-db", async (req, res) => {
+  try {
+    const [rows] = await pool.query(`SELECT COUNT(*) as totalCount FROM restaurants`);
+    const count = rows[0].totalCount;
+    const [allRows] = await pool.query(`SELECT * FROM restaurants LIMIT 3`);
+    return res.json({
+      status: "ok",
+      totalCount: count,
+      sampleData: allRows
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: error.message
+    });
+  }
 });
 
 // Mount routes

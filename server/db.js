@@ -4,34 +4,40 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const isProduction = process.env.NODE_ENV === "production";
 
-// Load environment file based on NODE_ENV  
+// Load environment files
+dotenv.config(); // Load .env first
+
+// Check if explicitly in development mode
+const isDevelopment = process.env.NODE_ENV === "development" || process.env.ENVIRONMENT === "development";
+const isProduction = !isDevelopment; // Default to production
+
+// Load additional env file for production if needed
 if (isProduction) {
-  dotenv.config({ path: path.join(__dirname, ".env.production") });
-} else {
-  dotenv.config();
+  dotenv.config({ path: path.join(__dirname, ".env.production"), override: false });
 }
 
-// Railway external proxy connection (works from outside Railway network)
-const RAILWAY_DB_HOST = "hopper.proxy.rlwy.net";
-const RAILWAY_DB_PORT = 38843;
-const RAILWAY_DB_USER = "root";
-const RAILWAY_DB_PASSWORD = "ptpSFGtnUkihtIqsrtfrflaGmAXjTmkl";
-const RAILWAY_DB_NAME = "railway";
+// Railway external proxy connection (always use for data consistency)
+const DEFAULT_DB_HOST = "hopper.proxy.rlwy.net";
+const DEFAULT_DB_PORT = 38843;
+const DEFAULT_DB_USER = "root";
+const DEFAULT_DB_PASSWORD = "ptpSFGtnUkihtIqsrtfrflaGmAXjTmkl";
+const DEFAULT_DB_NAME = "railway";
 
-// Prefer production credentials if connecting from Railway environment
-// (Check for RAILWAY_ENVIRONMENT_NAME which is set by Railway)
-const shouldUseProduction = isProduction || !!process.env.RAILWAY_ENVIRONMENT_NAME;
+// Use defaults for production, local for development
+const LOCAL_DB_HOST = "localhost";
+const LOCAL_DB_PORT = 3306;
+const LOCAL_DB_USER = "root";
+const LOCAL_DB_PASSWORD = "";
+const LOCAL_DB_NAME = "food_review_app";
 
-// Use Railway external connection if in production/railway environment, otherwise use local
-const dbHost = process.env.DB_HOST || (shouldUseProduction ? RAILWAY_DB_HOST : "localhost");
-const dbPort = parseInt(process.env.DB_PORT || (shouldUseProduction ? RAILWAY_DB_PORT : 3306));
-const dbUser = process.env.DB_USER || (shouldUseProduction ? RAILWAY_DB_USER : "root");
-const dbPassword = process.env.DB_PASSWORD || (shouldUseProduction ? RAILWAY_DB_PASSWORD : "");
-const dbName = process.env.DB_NAME || (shouldUseProduction ? RAILWAY_DB_NAME : "food_review_app");
+const dbHost = isDevelopment ? (process.env.DB_HOST || LOCAL_DB_HOST) : (process.env.DB_HOST || DEFAULT_DB_HOST);
+const dbPort = isDevelopment ? parseInt(process.env.DB_PORT || LOCAL_DB_PORT) : parseInt(process.env.DB_PORT || DEFAULT_DB_PORT);
+const dbUser = isDevelopment ? (process.env.DB_USER || LOCAL_DB_USER) : (process.env.DB_USER || DEFAULT_DB_USER);
+const dbPassword = isDevelopment ? (process.env.DB_PASSWORD || LOCAL_DB_PASSWORD) : (process.env.DB_PASSWORD || DEFAULT_DB_PASSWORD);
+const dbName = isDevelopment ? (process.env.DB_NAME || LOCAL_DB_NAME) : (process.env.DB_NAME || DEFAULT_DB_NAME);
 
-console.log(`[DB] Env: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} | Host: ${dbHost}:${dbPort} | DB: ${dbName}`);
+console.log(`[DB] Mode: ${isDevelopment ? 'DEVELOPMENT' : 'PRODUCTION'} | Connecting to: ${dbHost}:${dbPort}/${dbName}`);
 
 const pool = mysql.createPool({
   host: dbHost,

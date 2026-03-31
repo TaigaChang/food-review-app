@@ -2,7 +2,7 @@
   "name": "food-review-app",
   "version": "1.0.0",
   "description": "",
-  "main": "server/index.js",
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TaigaChang/food-review-app.git"
@@ -11,6 +11,9 @@
   "author": "",
   "license": "ISC",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "bugs": {
     "url": "https://github.com/TaigaChang/food-review-app/issues"
   },
@@ -30,6 +33,5 @@
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix client\" \"npm start --prefix server\"",
     "start": "node index.js"
-
   }
 }

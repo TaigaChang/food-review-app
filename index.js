@@ -23,8 +23,10 @@ if (isProduction) {
 const app = express();
 
 const corsOptions = {
-  origin: process.env.CLIENT_ORIGIN || 'https://food-review-app-rho.vercel.app',
+  origin: process.env.CLIENT_ORIGIN || ['https://food-review-app-rho.vercel.app', 'http://localhost:3001'],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 app.use(cors(corsOptions));

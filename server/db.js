@@ -1,9 +1,17 @@
 import mysql from "mysql2/promise";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-dotenv.config();
-
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === "production";
+
+// Load environment file based on NODE_ENV
+if (isProduction) {
+  dotenv.config({ path: path.join(__dirname, ".env.production") });
+} else {
+  dotenv.config();
+}
 
 const pool = mysql.createPool({
   host: isProduction ? process.env.DB_HOST : (process.env.DB_HOST || "localhost"),

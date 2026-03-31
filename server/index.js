@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import authenticateToken from "./middleware/authenticate_token.js";
@@ -8,7 +10,15 @@ import authRoutes from "./routes/auth-router.js";
 import restaurantsRouter from './routes/restaurants-router.js';
 import reviewsRouter from './routes/reviews-router.js';
 
-dotenv.config();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const isProduction = process.env.NODE_ENV === "production";
+
+// Load environment file
+if (isProduction) {
+  dotenv.config({ path: path.join(__dirname, ".env.production") });
+} else {
+  dotenv.config();
+}
 const app = express();
 // Allow the Next.js dev server (http://localhost:3001) to make credentialed requests
 // during development. In production this should be restricted to your app origin.

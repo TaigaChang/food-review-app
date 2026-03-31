@@ -71,7 +71,7 @@ export function ReviewForm({ restaurantName, restaurantId, reviews, userId, user
         return
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reviews`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

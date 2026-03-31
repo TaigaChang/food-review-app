@@ -34,7 +34,7 @@ export function AuthModal({ open, onOpenChange, mode, onModeChange }: AuthModalP
     setLoading(true)
 
     try {
-      const endpoint = isLogin ? "/auth/login" : "/auth/signup"
+      const endpoint = isLogin ? "/api/auth/login" : "/api/auth/signup"
       const body = isLogin
         ? { email, password }
         : { email, password, name_first: name.split(" ")[0], name_last: name.split(" ").slice(1).join(" ") || "" }

@@ -34,7 +34,7 @@ export function FeaturedSection() {
       try {
         // Fetch all restaurants
         const restaurantsRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/restaurants`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/restaurants`
         )
         const { restaurants: restaurantsData } = await restaurantsRes.json()
 
@@ -42,7 +42,7 @@ export function FeaturedSection() {
         const restaurantsWithRatings = await Promise.all(
           restaurantsData.map(async (restaurant: any) => {
             const aggregatedRes = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/restaurants/aggregated/${restaurant.id}`
+              `${process.env.NEXT_PUBLIC_API_URL}/api/restaurants/aggregated/${restaurant.id}`
             )
             const { ratings: aggregatedData } = await aggregatedRes.json()
             return {
@@ -62,7 +62,7 @@ export function FeaturedSection() {
         const restaurantsWithReviews = await Promise.all(
           topRestaurants.map(async (restaurant: any) => {
             const reviewsRes = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/reviews/restaurant?restaurant_id=${restaurant.id}`
+              `${process.env.NEXT_PUBLIC_API_URL}/api/reviews/restaurant?restaurant_id=${restaurant.id}`
             )
             const { reviews: reviewsData } = await reviewsRes.json()
             const reviews = reviewsData || []

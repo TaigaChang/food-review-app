@@ -30,7 +30,7 @@ export function RestaurantGrid() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/restaurants`)
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/restaurants`)
         const data = await res.json()
         const restaurantsList = data.restaurants || []
         setRestaurants(restaurantsList)
@@ -39,7 +39,7 @@ export function RestaurantGrid() {
         const ratingsMap: Record<number, Rating> = {}
         const ratingPromises = restaurantsList.map(async (restaurant: Restaurant) => {
           try {
-            const ratingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/restaurants/aggregated/${restaurant.id}`, {
+            const ratingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/restaurants/aggregated/${restaurant.id}`, {
               signal: AbortSignal.timeout(5000) // 5 second timeout
             })
             if (ratingRes.ok) {

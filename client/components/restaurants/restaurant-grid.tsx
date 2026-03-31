@@ -2,13 +2,6 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { RestaurantCard } from "@/components/restaurant-card"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 
 interface Restaurant {
   id: number
@@ -16,10 +9,13 @@ interface Restaurant {
   cuisine: string
   address: string
   created_at: string
+  phone?: string
+  image_url?: string
 }
 
 interface Rating {
   avg_overall_alltime: number
+  review_count?: number
 }
 
 type SortOption = "rating" | "name"
@@ -39,19 +35,25 @@ export function RestaurantGrid() {
         const restaurantsList = data.restaurants || []
         setRestaurants(restaurantsList)
 
-        // Fetch ratings
+        // Fetch ratings in parallel (much faster than sequentially)
         const ratingsMap: Record<number, Rating> = {}
-        for (const restaurant of restaurantsList) {
+        const ratingPromises = restaurantsList.map(async (restaurant: Restaurant) => {
           try {
-            const ratingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/restaurants/aggregated/${restaurant.id}`)
+            const ratingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/restaurants/aggregated/${restaurant.id}`, {
+              signal: AbortSignal.timeout(5000) // 5 second timeout
+            })
             if (ratingRes.ok) {
               const ratingData = await ratingRes.json()
               ratingsMap[restaurant.id] = ratingData.ratings
             }
           } catch (error) {
             console.error(`Failed to fetch rating for restaurant ${restaurant.id}:`, error)
+            // Continue without rating if it fails
           }
-        }
+        })
+        
+        // Wait for all rating requests to complete
+        await Promise.all(ratingPromises)
         setRatings(ratingsMap)
         setLoading(false)
       } catch (error) {
@@ -95,28 +97,26 @@ export function RestaurantGrid() {
     <div>
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-8">
-        <Select value={cuisine} onValueChange={setCuisine}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Cuisine" />
-          </SelectTrigger>
-          <SelectContent>
-            {cuisineTypes.map((type) => (
-              <SelectItem key={type} value={type}>
-                {type}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <select 
+          value={cuisine} 
+          onChange={(e) => setCuisine(e.target.value)}
+          className="w-40 px-3 py-2 rounded border border-input bg-background text-sm"
+        >
+          {cuisineTypes.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
 
-        <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="rating">Highest Rated</SelectItem>
-            <SelectItem value="name">Name A-Z</SelectItem>
-          </SelectContent>
-        </Select>
+        <select 
+          value={sort} 
+          onChange={(e) => setSort(e.target.value as SortOption)}
+          className="w-40 px-3 py-2 rounded border border-input bg-background text-sm"
+        >
+          <option value="rating">Highest Rated</option>
+          <option value="name">Name A-Z</option>
+        </select>
 
         {cuisine !== "All" && (
           <button
@@ -134,6 +134,7 @@ export function RestaurantGrid() {
           {filtered.map((restaurant) => {
             const rating = ratings[restaurant.id]
             const ratingValue = rating?.avg_overall_alltime || 0
+            const reviewCount = rating?.review_count || 0
 
             return (
               <RestaurantCard
@@ -145,12 +146,12 @@ export function RestaurantGrid() {
                   neighborhood: restaurant.address,
                   priceRange: "$$",
                   rating: Number(ratingValue),
-                  reviewCount: 0,
-                  image: "/images/restaurant-default.jpg",
+                  reviewCount: reviewCount,
+                  image: restaurant.image_url || "/images/restaurant-default.jpg",
                   description: "",
                   address: restaurant.address,
-                  hours: "",
-                  phone: "",
+                  hours: restaurant.phone || "",
+                  phone: restaurant.phone || "",
                   tags: [restaurant.cuisine],
                 }}
               />

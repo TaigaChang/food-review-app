@@ -47,8 +47,8 @@ export function FeaturedSection() {
             const { ratings: aggregatedData } = await aggregatedRes.json()
             return {
               ...restaurant,
-              rating: aggregatedData.avg_overall_alltime || 0,
-              reviewCount: aggregatedData.review_count || 0,
+              rating: aggregatedData?.avg_overall_alltime || 0,
+              reviewCount: aggregatedData?.review_count || 0,
             }
           })
         )
@@ -72,6 +72,7 @@ export function FeaturedSection() {
 
             return {
               ...restaurant,
+              image: restaurant.image_url || "/images/restaurant-default.jpg",
               recentReview: recentReview
                 ? {
                     text: recentReview.comment,

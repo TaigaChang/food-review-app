@@ -35,6 +35,23 @@ const pool = mysql.createPool({
   password: dbPassword,
   database: dbName,
   port: dbPort,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+  enableKeepAlive: true,
+  keepAliveInitialDelayMs: 0,
+  connectTimeout: isProduction ? 20000 : 5000,
 });
+
+// Test connection on startup
+if (isProduction) {
+  pool.query('SELECT COUNT(*) as cnt FROM restaurants')
+    .then(([rows]) => {
+      console.log(`[DB] ✅ Connected successfully! Found ${rows[0].cnt} restaurants`);
+    })
+    .catch(err => {
+      console.error(`[DB] ❌ Connection test failed:`, err.message);
+    });
+}
 
 export default pool;

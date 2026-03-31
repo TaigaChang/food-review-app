@@ -69,26 +69,36 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   enableKeepAlive: true,
-  connectTimeout: isProduction ? 20000 : 5000,
+  connectTimeout: isProduction ? 30000 : 5000, // Increased to 30s for Railway
+  idleTimeout: 30000,
 });
 
 // Error event listeners for pool
 pool.on('error', (err) => {
   console.error('[DB] Pool error event:', err.message);
+  console.error('[DB] Error code:', err.code);
+  console.error('[DB] Full error:', err);
 });
 
 pool.on('connection', () => {
   console.log('[DB] New connection established');
 });
 
-// Test connection on startup
+// Test connection on startup with detailed logging
+console.log('[DB] Attempting to test database connection...');
 pool.query('SELECT COUNT(*) as cnt FROM restaurants')
   .then(([rows]) => {
     console.log(`[DB] ✅ Connected successfully! Found ${rows[0].cnt} restaurants`);
   })
   .catch(err => {
     console.error(`[DB] ❌ Connection test failed:`, err.message);
-    console.error('[DB] Error details:', err);
+    console.error('[DB] Connection Error Details:', {
+      code: err.code,
+      errno: err.errno,
+      sqlState: err.sqlState,
+      message: err.message,
+      sql: err.sql
+    });
   });
 
 export default pool;

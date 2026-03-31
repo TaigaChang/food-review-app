@@ -87,6 +87,26 @@ app.get("/api/protected", authenticateToken, (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`[STARTUP] Server started successfully at ${new Date().toISOString()}`);
+});
+
+// Handle unhandled errors
+process.on('uncaughtException', (err) => {
+  console.error('[ERROR] Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[ERROR] Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  console.log('[SHUTDOWN] SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('[SHUTDOWN] Server closed');
+    process.exit(0);
+  });
 });

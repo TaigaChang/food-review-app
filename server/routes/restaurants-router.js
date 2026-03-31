@@ -3,21 +3,7 @@ import { getRestaurantsHandler } from '../services/restaurants-service.js';
 import { getAggregatedRatings, getMonthlyAggregatedRatings, getDailyAggregatedRatings } from '../services/aggregated-ratings-service.js';
 const router = express.Router();
 
-router.get('/', async (req, res, next) => {
-    try {
-        console.log('[RESTAURANTS] GET / - Fetching all restaurants');
-        const result = await getRestaurantsHandler(req, res, next);
-        console.log('[RESTAURANTS] GET / - Success');
-        return result;
-    } catch (error) {
-        console.error('[RESTAURANTS] GET / - Error:', error.message);
-        console.error('[RESTAURANTS] Error details:', error);
-        return res.status(500).json({ 
-            message: 'Error fetching restaurants',
-            error: error.message 
-        });
-    }
-});
+router.get('/', getRestaurantsHandler);
 
 // More specific routes BEFORE generic /:id route
 router.get('/aggregated/:id', async (req, res, next) => {

@@ -5,8 +5,6 @@ async function getRestaurantsHandler(req, res, next) {
     const { partial_restaurant } = req.query;
     
     try {
-        console.log('[RESTAURANTS] GET request - searching with params:', {restaurant_id, partial_restaurant});
-        
         if (restaurant_id) {
             const [rows] = await pool.query(
                 `SELECT * FROM restaurants WHERE id = ?`,
@@ -30,15 +28,10 @@ async function getRestaurantsHandler(req, res, next) {
             return res.status(200).json({ restaurants: rows });
         }
 
-        console.log('[RESTAURANTS] Fetching all restaurants from database...');
         const [rows] = await pool.query(`SELECT * FROM restaurants`);
-        console.log('[RESTAURANTS] Query returned', rows.length, 'rows');
-        if (rows.length === 0) {
-            console.log('[RESTAURANTS] WARNING: Empty result from restaurants table!');
-        }
         return res.status(200).json({ restaurants: rows });
     } catch (error) {
-        console.error('[RESTAURANTS] Error in getting restaurants:', error);
+        console.error('Error fetching restaurants:', error.message);
         return res.status(500).json({ message: error.sqlMessage || error.message });
     }
 }

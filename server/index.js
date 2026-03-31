@@ -45,7 +45,7 @@ app.use('/api/reviews', reviewsRouter);
 
 // Public health endpoint
 app.get("/", (req, res) => {
-  res.json({ message: "Backend is running!" });
+  res.json({ message: "Backend is running! (Updated)" });
 });
 
 // Development helper to get a test token

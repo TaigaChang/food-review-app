@@ -35,8 +35,14 @@ app.use(cookieParser());
 
 // Debug middleware
 app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
   next();
 });
+
+// Startup information
+console.log(`[CONFIG] NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`[CONFIG] CLIENT_ORIGIN: ${process.env.CLIENT_ORIGIN || 'https://food-review-app-rho.vercel.app'}`);
+console.log(`[CONFIG] PORT: ${process.env.PORT || 5000}`);
 
 // Mount routes
 app.use('/api/auth', authRoutes);

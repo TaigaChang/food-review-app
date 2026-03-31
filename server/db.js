@@ -72,16 +72,23 @@ const pool = mysql.createPool({
   connectTimeout: isProduction ? 20000 : 5000,
 });
 
+// Error event listeners for pool
+pool.on('error', (err) => {
+  console.error('[DB] Pool error event:', err.message);
+});
+
+pool.on('connection', () => {
+  console.log('[DB] New connection established');
+});
+
 // Test connection on startup
-// Disabled in production to prevent blocking startup
-// if (isProduction) {
-//   pool.query('SELECT COUNT(*) as cnt FROM restaurants')
-//     .then(([rows]) => {
-//       console.log(`[DB] ✅ Connected successfully! Found ${rows[0].cnt} restaurants`);
-//     })
-//     .catch(err => {
-//       console.error(`[DB] ❌ Connection test failed:`, err.message);
-//     });
-// }
+pool.query('SELECT COUNT(*) as cnt FROM restaurants')
+  .then(([rows]) => {
+    console.log(`[DB] ✅ Connected successfully! Found ${rows[0].cnt} restaurants`);
+  })
+  .catch(err => {
+    console.error(`[DB] ❌ Connection test failed:`, err.message);
+    console.error('[DB] Error details:', err);
+  });
 
 export default pool;

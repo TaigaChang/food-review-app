@@ -21,9 +21,6 @@
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix client\" \"npm start --prefix server\"",
     "start": "node server/index.js"
-  },
-  "dependencies": {
-    "bcrypt": "^6.0.0",
-    "mysql2": "^3.15.3"
+
   }
 }

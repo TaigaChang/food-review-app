@@ -13,12 +13,12 @@ if (isProduction) {
   dotenv.config();
 }
 
-// Railway internal connection details
-const RAILWAY_DB_HOST = "mysql.railway.internal";
+// Railway external proxy connection (works from outside Railway network)
+const RAILWAY_DB_HOST = "hopper.proxy.rlwy.net";
+const RAILWAY_DB_PORT = 38843;
 const RAILWAY_DB_USER = "root";
 const RAILWAY_DB_PASSWORD = "ptpSFGtnUkihtIqsrtfrflaGmAXjTmkl";
 const RAILWAY_DB_NAME = "railway";
-const RAILWAY_DB_PORT = 3306;
 
 // Use Railway internal connection in production if env vars not set
 const dbHost = process.env.DB_HOST || (isProduction ? RAILWAY_DB_HOST : "localhost");

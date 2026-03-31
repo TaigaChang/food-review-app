@@ -8,9 +8,16 @@ import { RestaurantHero } from "@/components/restaurant-detail/restaurant-hero"
 import { RestaurantInfo } from "@/components/restaurant-detail/restaurant-info"
 import { RatingBreakdown } from "@/components/restaurant-detail/rating-breakdown"
 import { ReviewList } from "@/components/restaurant-detail/review-list"
-import { ReviewForm } from "@/components/restaurant-detail/review-form"
+import { ReviewFormDialog } from "@/components/review-form-dialog"
 import { RatingTrendChart } from "@/components/restaurant-detail/rating-trend-chart"
 import type { Restaurant, Review, RatingHistoryPoint } from "@/lib/data"
+
+interface User {
+  id: number
+  email: string
+  name_first: string
+  name_last: string
+}
 
 interface ApiRestaurant {
   id: number
@@ -18,6 +25,10 @@ interface ApiRestaurant {
   cuisine: string
   address: string
   created_at: string
+  phone?: string
+  image_url?: string
+  hours?: string | object
+  about?: string
 }
 
 interface ApiRating {
@@ -32,6 +43,8 @@ interface ApiReview {
   id: number
   user_id: number
   restaurant_id: number
+  restaurant_name?: string
+  user_name?: string
   taste: number
   service: number
   ambiance: number
@@ -71,9 +84,98 @@ export default function RestaurantDetailPage() {
   const id = params.id as string
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
+  const [userReviews, setUserReviews] = useState<Review[]>([])
   const [monthlyRatings, setMonthlyRatings] = useState<RatingHistoryPoint[]>([])
   const [loading, setLoading] = useState(true)
   const [notFoundError, setNotFoundError] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [reviewFormDialogOpen, setReviewFormDialogOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    // Check if user is logged in from localStorage
+    const storedUser = localStorage.getItem("user")
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser))
+      } catch (e) {
+        console.error("Failed to parse stored user:", e)
+      }
+    }
+
+    // Listen for storage changes (when user logs in on another tab or this page)
+    const handleStorageChange = () => {
+      const updatedUser = localStorage.getItem("user")
+      if (updatedUser) {
+        try {
+          setUser(JSON.parse(updatedUser))
+        } catch (e) {
+          console.error("Failed to parse updated user:", e)
+        }
+      } else {
+        setUser(null)
+      }
+    }
+
+    // Use a polling approach since storage events only fire across tabs
+    const interval = setInterval(handleStorageChange, 1000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  // Fetch user's reviews from other restaurants
+  useEffect(() => {
+    const fetchUserReviews = async () => {
+      try {
+        const token = localStorage.getItem("authToken")
+        if (!token) {
+          setUserReviews([])
+          return
+        }
+
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/reviews/user`
+        const response = await fetch(apiUrl, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (!response.ok) {
+          const errorDetails = await response.text()
+          console.error(`Failed to fetch user reviews: ${response.status} ${response.statusText}`, errorDetails)
+          setUserReviews([])
+          return
+        }
+
+        const data: { reviews: ApiReview[] } = await response.json()
+        const transformedUserReviews: Review[] = data.reviews.map((review) => ({
+          id: review.id.toString(),
+          author: review.user_name || `User ${review.user_id}`,
+          avatar: String(review.user_id % 10),
+          scores: {
+            taste: parseFloat(review.taste.toString()),
+            ambiance: parseFloat(review.ambiance.toString()),
+            service: parseFloat(review.service.toString()),
+            price: parseFloat(review.price.toString()),
+          },
+          rating: parseFloat(review.taste.toString()) * 0.6 + parseFloat(review.service.toString()) * 0.15 + parseFloat(review.ambiance.toString()) * 0.15 + parseFloat(review.price.toString()) * 0.1,
+          date: new Date(review.created_at).toLocaleDateString(),
+          text: review.comment,
+          restaurantId: review.restaurant_id,
+          restaurantName: review.restaurant_name,
+        }))
+        setUserReviews(transformedUserReviews)
+      } catch (error) {
+        console.error("Failed to fetch user reviews:", error)
+        setUserReviews([])
+      }
+    }
+
+    if (user && mounted) {
+      fetchUserReviews()
+    }
+  }, [user, mounted])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -145,11 +247,12 @@ export default function RestaurantDetailPage() {
           priceRange: "$$$", // Not provided by API
           rating: rating ? parseFloat(rating.avg_overall_alltime.toString()) : 0,
           reviewCount: apiReviews.length,
-          image: "/images/restaurant-1.jpg", // Placeholder
-          description: `Experience fine dining at ${apiRestaurant.name}, a ${apiRestaurant.cuisine} restaurant located at ${apiRestaurant.address}.`, // Generated description
+          image: apiRestaurant.image_url || "/images/restaurant-1.jpg", // Use Google image or placeholder
+          about: apiRestaurant.about || `Experience fine dining at ${apiRestaurant.name}, a ${apiRestaurant.cuisine} restaurant located at ${apiRestaurant.address}.`, // Use Google about or generated
+          description: `Experience fine dining at ${apiRestaurant.name}, a ${apiRestaurant.cuisine} restaurant located at ${apiRestaurant.address}.`, // Fallback
           address: apiRestaurant.address,
-          hours: "Tue-Sat 6:00 PM - 10:00 PM", // Not provided by API
-          phone: "(555) 000-0000", // Not provided by API
+          hours: apiRestaurant.hours || "Hours not available", // Use Google hours or default
+          phone: apiRestaurant.phone || "Phone not available", // Use Google phone or default
           tags: [apiRestaurant.cuisine, "Restaurant"], // Generated tags
           reviews: [],
           categoryAverages: rating ? {
@@ -165,24 +268,24 @@ export default function RestaurantDetailPage() {
           },
           ratingHistory: {
             fiveYear: apiMonthlyRatings
-              .filter(m => m.month_index <= 60)
+              .filter(m => m.month_index <= 60 && m.avg_overall !== null && m.avg_overall !== undefined)
               .map(m => ({
                 label: new Date(m.month_start).toLocaleDateString('en-US', { year: '2-digit', month: 'short' }),
-                rating: parseFloat(m.avg_overall.toString()),
+                rating: parseFloat(String(m.avg_overall)),
               }))
               .reverse(),
             oneYear: apiMonthlyRatings
-              .filter(m => m.month_index <= 12)
+              .filter(m => m.month_index <= 12 && m.avg_overall !== null && m.avg_overall !== undefined)
               .map(m => ({
                 label: new Date(m.month_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                rating: parseFloat(m.avg_overall.toString()),
+                rating: parseFloat(String(m.avg_overall)),
               }))
               .reverse(),
             oneMonth: apiDailyRatings
-              .filter(d => d.avg_overall !== null)
+              .filter(d => d.avg_overall !== null && d.avg_overall !== undefined)
               .map(d => ({
                 label: new Date(d.day_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                rating: parseFloat(d.avg_overall.toString()),
+                rating: parseFloat(String(d.avg_overall)),
               }))
               .reverse(),
           },
@@ -190,24 +293,26 @@ export default function RestaurantDetailPage() {
 
         // Transform monthly ratings for the state
         const transformedMonthlyRatings: RatingHistoryPoint[] = apiMonthlyRatings
+          .filter(m => m.avg_overall !== null && m.avg_overall !== undefined)
           .map(m => ({
             label: new Date(m.month_start).toLocaleDateString('en-US', { year: '2-digit', month: 'short', day: 'numeric' }),
-            rating: parseFloat(m.avg_overall.toString()),
+            rating: parseFloat(String(m.avg_overall)),
           }))
           .reverse()
         const transformedReviews: Review[] = apiReviews.map((review) => ({
           id: review.id.toString(),
-          author: `User ${review.user_id}`,
+          author: review.user_name || `User ${review.user_id}`,
           avatar: String(review.user_id % 10),
           scores: {
-            taste: review.taste,
-            ambiance: review.ambiance,
-            service: review.service,
-            price: review.price,
+            taste: parseFloat(review.taste.toString()),
+            ambiance: parseFloat(review.ambiance.toString()),
+            service: parseFloat(review.service.toString()),
+            price: parseFloat(review.price.toString()),
           },
-          rating: review.taste * 0.6 + review.service * 0.15 + review.ambiance * 0.15 + review.price * 0.1, // Weighted average
+          rating: parseFloat(review.taste.toString()) * 0.6 + parseFloat(review.service.toString()) * 0.15 + parseFloat(review.ambiance.toString()) * 0.15 + parseFloat(review.price.toString()) * 0.1,
           date: new Date(review.created_at).toLocaleDateString(),
           text: review.comment,
+          restaurantId: review.restaurant_id,
         }))
 
         setRestaurant(transformedRestaurant)
@@ -264,8 +369,11 @@ export default function RestaurantDetailPage() {
               <RatingBreakdown restaurant={restaurant} />
               <RatingTrendChart history={restaurant.ratingHistory} restaurantName={restaurant.name} />
               <RestaurantInfo restaurant={restaurant} />
-              <ReviewList reviews={reviews} />
-              <ReviewForm restaurantName={restaurant.name} reviews={reviews} />
+              <ReviewList 
+                reviews={reviews} 
+                onWriteReviewClick={() => setReviewFormDialogOpen(true)}
+                isLoggedIn={!!user}
+              />
             </div>
 
             {/* Sidebar - Similar restaurants or call to action */}
@@ -274,6 +382,19 @@ export default function RestaurantDetailPage() {
         </div>
       </main>
       <SiteFooter />
+
+      <ReviewFormDialog
+        open={reviewFormDialogOpen}
+        onOpenChange={setReviewFormDialogOpen}
+        restaurantName={restaurant.name}
+        restaurantId={parseInt(id)}
+        reviews={reviews}
+        userId={user?.id}
+        userReviews={userReviews}
+        onReviewSubmitted={() => {
+          // Optionally refresh reviews here
+        }}
+      />
     </div>
   )
 }

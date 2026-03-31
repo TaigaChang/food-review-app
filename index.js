@@ -49,9 +49,26 @@ app.use('/api/auth', authRoutes);
 app.use('/api/restaurants', restaurantsRouter);
 app.use('/api/reviews', reviewsRouter);
 
-// Health endpoint
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Root endpoint
 app.get("/", (req, res) => {
-  res.json({ message: "Backend is running" });
+  res.json({ message: "Backend is running", environment: process.env.NODE_ENV });
+});
+
+// Configuration debug endpoint (without sensitive info)
+app.get("/api/debug/config", (req, res) => {
+  res.json({
+    node_env: process.env.NODE_ENV,
+    port: process.env.PORT || 5000,
+    has_client_origin: !!process.env.CLIENT_ORIGIN,
+    has_db_host: !!process.env.DB_HOST,
+    has_database_url: !!process.env.DATABASE_URL,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Dev token endpoint

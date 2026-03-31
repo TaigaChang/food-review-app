@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Load environment files
-dotenv.config(); // Load .env first
+dotenv.config(); // Load .env (.env.local, etc)
 
 // Check if explicitly in development mode
 const isDevelopment = process.env.NODE_ENV === "development" || process.env.ENVIRONMENT === "development";
@@ -17,25 +17,25 @@ if (isProduction) {
   dotenv.config({ path: path.join(__dirname, ".env.production"), override: false });
 }
 
-// Railway external proxy connection (always use for data consistency)
-const DEFAULT_DB_HOST = "hopper.proxy.rlwy.net";
-const DEFAULT_DB_PORT = 38843;
-const DEFAULT_DB_USER = "root";
-const DEFAULT_DB_PASSWORD = "ptpSFGtnUkihtIqsrtfrflaGmAXjTmkl";
-const DEFAULT_DB_NAME = "railway";
+// Railway external proxy connection (always use for consistency)
+const DEFAULT_DB_HOST = process.env.DB_HOST || process.env.RAILWAY_DB_HOST || "hopper.proxy.rlwy.net";
+const DEFAULT_DB_PORT = parseInt(process.env.DB_PORT || process.env.RAILWAY_DB_PORT || 38843);
+const DEFAULT_DB_USER = process.env.DB_USER || process.env.RAILWAY_DB_USER || "root";
+const DEFAULT_DB_PASSWORD = process.env.DB_PASSWORD || process.env.RAILWAY_DB_PASSWORD || "ptpSFGtnUkihtIqsrtfrflaGmAXjTmkl";
+const DEFAULT_DB_NAME = process.env.DB_NAME || process.env.RAILWAY_DB_NAME || "railway";
 
-// Use defaults for production, local for development
-const LOCAL_DB_HOST = "localhost";
-const LOCAL_DB_PORT = 3306;
-const LOCAL_DB_USER = "root";
-const LOCAL_DB_PASSWORD = "";
-const LOCAL_DB_NAME = "food_review_app";
+// Local connection
+const LOCAL_DB_HOST = process.env.DB_HOST_LOCAL || "localhost";
+const LOCAL_DB_PORT = parseInt(process.env.DB_PORT_LOCAL || 3306);
+const LOCAL_DB_USER = process.env.DB_USER_LOCAL || "root";
+const LOCAL_DB_PASSWORD = process.env.DB_PASSWORD_LOCAL || "";
+const LOCAL_DB_NAME = process.env.DB_NAME_LOCAL || "food_review_app";
 
-const dbHost = isDevelopment ? (process.env.DB_HOST || LOCAL_DB_HOST) : (process.env.DB_HOST || DEFAULT_DB_HOST);
-const dbPort = isDevelopment ? parseInt(process.env.DB_PORT || LOCAL_DB_PORT) : parseInt(process.env.DB_PORT || DEFAULT_DB_PORT);
-const dbUser = isDevelopment ? (process.env.DB_USER || LOCAL_DB_USER) : (process.env.DB_USER || DEFAULT_DB_USER);
-const dbPassword = isDevelopment ? (process.env.DB_PASSWORD || LOCAL_DB_PASSWORD) : (process.env.DB_PASSWORD || DEFAULT_DB_PASSWORD);
-const dbName = isDevelopment ? (process.env.DB_NAME || LOCAL_DB_NAME) : (process.env.DB_NAME || DEFAULT_DB_NAME);
+const dbHost = isDevelopment ? LOCAL_DB_HOST : DEFAULT_DB_HOST;
+const dbPort = isDevelopment ? LOCAL_DB_PORT : DEFAULT_DB_PORT;
+const dbUser = isDevelopment ? LOCAL_DB_USER : DEFAULT_DB_USER;
+const dbPassword = isDevelopment ? LOCAL_DB_PASSWORD : DEFAULT_DB_PASSWORD;
+const dbName = isDevelopment ? LOCAL_DB_NAME : DEFAULT_DB_NAME;
 
 console.log(`[DB] Mode: ${isDevelopment ? 'DEVELOPMENT' : 'PRODUCTION'} | Connecting to: ${dbHost}:${dbPort}/${dbName}`);
 

@@ -1,9 +1,13 @@
 {
-  "buildCommand": "npm install --prefix client && npm run build --prefix client",
+  "projectSettings": {
+    "sourceFilesOutsideRootDirectory": true
+  },
+  "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "outputDirectory": "client/.next",
+  "outputDirectory": ".next",
   "framework": "nextjs",
+  "root": "client",
   "env": {
-    "NEXT_PUBLIC_API_URL": "@food-review-backend-api-url"
+    "NEXT_PUBLIC_API_URL": "https://food-review-app-production-f96f.up.railway.app"
   }
 }

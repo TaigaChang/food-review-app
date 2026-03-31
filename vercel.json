@@ -1,0 +1,11 @@
+{
+  "buildCommand": "cd client && npm run build",
+  "outputDirectory": "client/.next",
+  "framework": "nextjs",
+  "root": "client",
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://food-review-app-production-f96f.up.railway.app"
+  }
+}
+
+

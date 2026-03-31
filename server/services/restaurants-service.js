@@ -29,6 +29,7 @@ async function getRestaurantsHandler(req, res, next) {
         }
 
         const [rows] = await pool.query(`SELECT * FROM restaurants`);
+        console.log(`[API] Restaurants query returned ${rows.length} rows`);
         return res.status(200).json({ restaurants: rows });
     } catch (error) {
         console.error('Error in getting restaurants:', error);

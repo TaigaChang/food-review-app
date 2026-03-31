@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === "production";
 
-// Load environment file based on NODE_ENV
+// Load environment file based on NODE_ENV  
 if (isProduction) {
   dotenv.config({ path: path.join(__dirname, ".env.production") });
 } else {
@@ -20,14 +20,18 @@ const RAILWAY_DB_USER = "root";
 const RAILWAY_DB_PASSWORD = "ptpSFGtnUkihtIqsrtfrflaGmAXjTmkl";
 const RAILWAY_DB_NAME = "railway";
 
-// Use Railway internal connection in production if env vars not set
-const dbHost = process.env.DB_HOST || (isProduction ? RAILWAY_DB_HOST : "localhost");
-const dbPort = parseInt(process.env.DB_PORT || (isProduction ? RAILWAY_DB_PORT : 3306));
-const dbUser = process.env.DB_USER || (isProduction ? RAILWAY_DB_USER : "root");
-const dbPassword = process.env.DB_PASSWORD || (isProduction ? RAILWAY_DB_PASSWORD : "");
-const dbName = process.env.DB_NAME || (isProduction ? RAILWAY_DB_NAME : "food_review_app");
+// Prefer production credentials if connecting from Railway environment
+// (Check for RAILWAY_ENVIRONMENT_NAME which is set by Railway)
+const shouldUseProduction = isProduction || !!process.env.RAILWAY_ENVIRONMENT_NAME;
 
-console.log(`[DB] Connecting to: ${dbHost}:${dbPort}/${dbName}`);
+// Use Railway external connection if in production/railway environment, otherwise use local
+const dbHost = process.env.DB_HOST || (shouldUseProduction ? RAILWAY_DB_HOST : "localhost");
+const dbPort = parseInt(process.env.DB_PORT || (shouldUseProduction ? RAILWAY_DB_PORT : 3306));
+const dbUser = process.env.DB_USER || (shouldUseProduction ? RAILWAY_DB_USER : "root");
+const dbPassword = process.env.DB_PASSWORD || (shouldUseProduction ? RAILWAY_DB_PASSWORD : "");
+const dbName = process.env.DB_NAME || (shouldUseProduction ? RAILWAY_DB_NAME : "food_review_app");
+
+console.log(`[DB] Env: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} | Host: ${dbHost}:${dbPort} | DB: ${dbName}`);
 
 const pool = mysql.createPool({
   host: dbHost,

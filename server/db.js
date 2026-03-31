@@ -18,11 +18,11 @@ if (isProduction) {
 }
 
 // Railway external proxy connection (always use for consistency)
-const DEFAULT_DB_HOST = process.env.DB_HOST || process.env.RAILWAY_DB_HOST || "hopper.proxy.rlwy.net";
-const DEFAULT_DB_PORT = parseInt(process.env.DB_PORT || process.env.RAILWAY_DB_PORT || 38843);
-const DEFAULT_DB_USER = process.env.DB_USER || process.env.RAILWAY_DB_USER || "root";
-const DEFAULT_DB_PASSWORD = process.env.DB_PASSWORD || process.env.RAILWAY_DB_PASSWORD || "ptpSFGtnUkihtIqsrtfrflaGmAXjTmkl";
-const DEFAULT_DB_NAME = process.env.DB_NAME || process.env.RAILWAY_DB_NAME || "railway";
+const DEFAULT_DB_HOST = process.env.DB_HOST || "localhost";
+const DEFAULT_DB_PORT = parseInt(process.env.DB_PORT || 3306);
+const DEFAULT_DB_USER = process.env.DB_USER || "root";
+const DEFAULT_DB_PASSWORD = process.env.DB_PASSWORD || "";
+const DEFAULT_DB_NAME = process.env.DB_NAME || "food_review_app";
 
 // Local connection
 const LOCAL_DB_HOST = process.env.DB_HOST_LOCAL || "localhost";

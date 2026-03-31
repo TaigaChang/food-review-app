@@ -1,12 +1,17 @@
-import express from "express";
+import http from "http";
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT) || 3000;
 
-app.get("/", (req, res) => {
-  res.json({ message: "Backend is running" });
+const server = http.createServer((req, res) => {
+  if (req.url === "/") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ message: "Backend is running" }));
+  } else {
+    res.writeHead(404, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Not found" }));
+  }
 });
 
-app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server listening on port ${PORT}`);
 });

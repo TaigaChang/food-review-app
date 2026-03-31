@@ -67,6 +67,7 @@ app.get("/api/debug/config", (req, res) => {
     has_client_origin: !!process.env.CLIENT_ORIGIN,
     has_db_host: !!process.env.DB_HOST,
     has_database_url: !!process.env.DATABASE_URL,
+    version: "701f6e4", // Latest commit ID
     timestamp: new Date().toISOString()
   });
 });

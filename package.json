@@ -20,7 +20,7 @@
   },
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix client\" \"npm start --prefix server\"",
-    "start": "node server/index.js"
+    "start": "node index.js"
 
   }
 }

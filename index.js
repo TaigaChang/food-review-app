@@ -84,9 +84,30 @@ app.get("/api/debug/config", (req, res) => {
     has_client_origin: !!process.env.CLIENT_ORIGIN,
     has_db_host: !!process.env.DB_HOST,
     has_database_url: !!process.env.DATABASE_URL,
-    version: "701f6e4", // Latest commit ID
+    db_host: process.env.DB_HOST || 'NOT SET',
+    db_port: process.env.DB_PORT || 'NOT SET',
+    version: "8913189",
     timestamp: new Date().toISOString()
   });
+});
+
+// Diagnostics endpoint
+app.get("/api/test-db", async (req, res) => {
+  try {
+    const [result] = await pool.query('SELECT COUNT(*) as cnt FROM restaurants');
+    res.json({
+      status: 'ok',
+      restaurants_count: result[0].cnt,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message,
+      code: error.code,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Dev token endpoint

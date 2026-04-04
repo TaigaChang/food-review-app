@@ -8,6 +8,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Load environment files
 dotenv.config(); // Load .env (.env.local, etc)
 
+// Debug: Log available environment variables related to database
+console.log(`[DB] Available database env vars:`);
+const dbEnvVars = ['DATABASE_URL', 'DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'RAILWAY_DB_HOST', 'RAILWAY_DB_PORT', 'NODE_ENV'];
+dbEnvVars.forEach((key) => {
+  const value = process.env[key];
+  const display = key.includes('PASSWORD') ? (value ? '***' : 'NOT SET') : value || 'NOT SET';
+  console.log(`[DB]   ${key}=${display}`);
+});
+
 // Check if explicitly in development mode
 const isDevelopment = process.env.NODE_ENV === "development" || process.env.ENVIRONMENT === "development";
 const isProduction = !isDevelopment; // Default to production

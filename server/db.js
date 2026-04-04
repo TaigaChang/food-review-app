@@ -65,7 +65,14 @@ if (!dbHost) {
     dbName = process.env.DB_NAME_LOCAL || DEV_DB_NAME;
   } else {
     // Production mode (Railway)
-    dbHost = process.env.DB_HOST || PROD_DB_HOST;
+    // Try internal Railway database first, then fall back to external proxy
+    if (process.env.RAILWAY_DB_HOST) {
+      // Use Railway's internal host if available
+      dbHost = process.env.RAILWAY_DB_HOST;
+    } else {
+      dbHost = process.env.DB_HOST || PROD_DB_HOST;
+    }
+    
     dbPort = parseInt(process.env.DB_PORT || PROD_DB_PORT);
     dbUser = process.env.DB_USER || PROD_DB_USER;
     dbPassword = process.env.DB_PASSWORD || PROD_DB_PASSWORD;

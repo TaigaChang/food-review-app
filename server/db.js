@@ -12,9 +12,12 @@ dotenv.config(); // Load .env (.env.local, etc)
 const isDevelopment = process.env.NODE_ENV === "development" || process.env.ENVIRONMENT === "development";
 const isProduction = !isDevelopment; // Default to production
 
+console.log(`[DB] Environment detection: NODE_ENV=${process.env.NODE_ENV}, isDevelopment=${isDevelopment}, isProduction=${isProduction}`);
+
 // Load additional env file for production if needed
 if (isProduction) {
   dotenv.config({ path: path.join(__dirname, ".env.production"), override: false });
+  console.log(`[DB] Loaded production environment file`);
 }
 
 // Handle Railway DATABASE_URL format if provided
@@ -71,20 +74,28 @@ if (!dbHost) {
 }
 
 console.log(`[DB] Mode: ${isDevelopment ? 'DEVELOPMENT' : 'PRODUCTION'} | Connecting to: ${dbHost}:${dbPort}/${dbName}`);
+console.log(`[DB] Connection config: user=${dbUser}, hasPassword=${!!dbPassword}`);
 
-const pool = mysql.createPool({
-  host: dbHost,
-  user: dbUser,
-  password: dbPassword,
-  database: dbName,
-  port: dbPort,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  enableKeepAlive: true,
-  connectTimeout: isProduction ? 30000 : 5000, // Increased to 30s for Railway
-  idleTimeout: 30000,
-});
+let pool;
+try {
+  pool = mysql.createPool({
+    host: dbHost,
+    user: dbUser,
+    password: dbPassword,
+    database: dbName,
+    port: dbPort,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    enableKeepAlive: true,
+    connectTimeout: isProduction ? 30000 : 5000, // Increased to 30s for Railway
+    idleTimeout: 30000,
+  });
+  console.log('[DB] Connection pool created successfully');
+} catch (err) {
+  console.error('[DB] Failed to create connection pool:', err.message);
+  throw err;
+}
 
 // Error event listeners for pool
 pool.on('error', (err) => {

@@ -34,15 +34,19 @@ const corsOptions = {
     ];
     
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Also allow in development
+    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
       callback(null, true);
     } else {
-      // Still allow, but log it
-      console.log(`CORS request from unverified origin: ${origin}`);
-      callback(null, true);
+      // In production, still allow but log it
+      console.log(`[CORS] Request from origin: ${origin}`);
+      callback(null, true); // Still allow to avoid 502 errors
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200, // For compatibility with older browsers
 };
 
 app.use(cors(corsOptions));
@@ -61,6 +65,28 @@ app.get("/health", (req, res) => {
 // Test endpoint to verify routing works
 app.get("/api/test", (req, res) => {
   res.json({ message: "Test endpoint works", routesReady: true });
+});
+
+// Debug endpoint - shows server status
+app.get("/api/debug/status", async (req, res) => {
+  try {
+    const dbTest = await import('./db.js').then(m => m.testConnection());
+    res.json({ 
+      status: "ok", 
+      environment: process.env.NODE_ENV,
+      routesReady,
+      database: dbTest,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    res.json({
+      status: "ok",
+      environment: process.env.NODE_ENV,
+      routesReady,
+      database: { success: false, error: err.message },
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Protected endpoint

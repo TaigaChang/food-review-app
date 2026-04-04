@@ -131,7 +131,7 @@ pool.query('SELECT COUNT(*) as cnt FROM restaurants')
     console.log(`[DB] ✅ Connected successfully! Found ${rows[0].cnt} restaurants`);
   })
   .catch(err => {
-    console.error(`[DB] ❌ Connection test failed:`, err.message);
+    console.error(`[DB] ⚠️  Connection test failed, but server will continue:`, err.message);
     console.error('[DB] Connection Error Details:', {
       code: err.code,
       errno: err.errno,
@@ -139,6 +139,18 @@ pool.query('SELECT COUNT(*) as cnt FROM restaurants')
       message: err.message,
       sql: err.sql
     });
+    // Don't throw - let server continue with a warning
+    // Routes will fail with database errors, but at least health checks work
   });
+
+// Add a health check function that can be called later
+export async function testConnection() {
+  try {
+    const [rows] = await pool.query('SELECT COUNT(*) as cnt FROM restaurants');
+    return { success: true, restaurants: rows[0].cnt };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
 
 export default pool;

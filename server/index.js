@@ -67,28 +67,6 @@ app.get("/api/test", (req, res) => {
   res.json({ message: "Test endpoint works", routesReady: true });
 });
 
-// Debug endpoint - shows server status
-app.get("/api/debug/status", async (req, res) => {
-  try {
-    const dbTest = await import('./db.js').then(m => m.testConnection());
-    res.json({ 
-      status: "ok", 
-      environment: process.env.NODE_ENV,
-      routesReady,
-      database: dbTest,
-      timestamp: new Date().toISOString()
-    });
-  } catch (err) {
-    res.json({
-      status: "ok",
-      environment: process.env.NODE_ENV,
-      routesReady,
-      database: { success: false, error: err.message },
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
 // Protected endpoint
 app.get("/api/protected", (req, res) => {
   // This is a simple protected endpoint for dev

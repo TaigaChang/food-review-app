@@ -23,7 +23,21 @@ if (isProduction) {
 const app = express();
 
 const corsOptions = {
-  origin: process.env.CLIENT_ORIGIN || 'http://localhost:3001',
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'https://food-review-app-rho.vercel.app',
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:3001'
+    ];
+    
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all for now to debug
+    }
+  },
   credentials: true,
 };
 

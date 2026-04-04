@@ -58,32 +58,10 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// Import routes after server setup
-let authRoutes, restaurantsRouter, reviewsRouter;
-let dbReady = false;
-let dbError = null;
-
-// Try to import and initialize routes asynchronously
-(async () => {
-  try {
-    // Import routes
-    authRoutes = (await import('./routes/auth-router.js')).default;
-    restaurantsRouter = (await import('./routes/restaurants-router.js')).default;
-    reviewsRouter = (await import('./routes/reviews-router.js')).default;
-    
-    // Mount routes
-    app.use('/api/auth', authRoutes);
-    app.use('/api/restaurants', restaurantsRouter);
-    app.use('/api/reviews', reviewsRouter);
-    
-    dbReady = true;
-    console.log("Routes initialized successfully");
-  } catch (err) {
-    dbError = err;
-    console.error("Error initializing routes:", err.message);
-    // Don't crash - serve health check only
-  }
-})();
+// Test endpoint to verify routing works
+app.get("/api/test", (req, res) => {
+  res.json({ message: "Test endpoint works", routesReady: true });
+});
 
 // Protected endpoint
 app.get("/api/protected", (req, res) => {
@@ -104,35 +82,68 @@ app.get("/api/dev/token", (req, res) => {
   res.json({ token, how_to_use: "Add header: Authorization: Bearer " + token });
 });
 
-// Error handler
-app.use((err, req, res, next) => {
-  console.error("Unhandled error:", err);
-  res.status(500).json({ 
-    error: "Internal server error", 
-    message: process.env.NODE_ENV === "production" ? "Error processing request" : err.message 
+// Import routes after server setup
+let authRoutes, restaurantsRouter, reviewsRouter;
+let dbReady = false;
+let dbError = null;
+let routesReady = false;
+
+// Try to import and initialize routes asynchronously
+const initializeRoutes = async () => {
+  try {
+    // Import routes
+    authRoutes = (await import('./routes/auth-router.js')).default;
+    restaurantsRouter = (await import('./routes/restaurants-router.js')).default;
+    reviewsRouter = (await import('./routes/reviews-router.js')).default;
+    
+    // Mount routes BEFORE error handlers!
+    app.use('/api/auth', authRoutes);
+    app.use('/api/restaurants', restaurantsRouter);
+    app.use('/api/reviews', reviewsRouter);
+    
+    routesReady = true;
+    console.log("Routes initialized and mounted successfully");
+  } catch (err) {
+    dbError = err;
+    console.error("Error initializing routes:", err.message, err.stack);
+    // Don't crash - serve health check only
+  }
+};
+
+// Initialize routes BEFORE starting the server
+(async () => {
+  await initializeRoutes();
+  
+  // Error handler (after all routes)
+  app.use((err, req, res, next) => {
+    console.error("Unhandled error:", err);
+    res.status(500).json({ 
+      error: "Internal server error", 
+      message: process.env.NODE_ENV === "production" ? "Error processing request" : err.message 
+    });
   });
-});
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: "Not found" });
-});
-
-const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server started on port ${PORT}`);
-  console.log(`Time: ${new Date().toISOString()}`);
-  console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
-  console.log(`Routes ready: ${dbReady ? 'YES' : 'NO'}`);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, gracefully shutting down');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
+  // 404 handler (LAST - catches all unmatched routes)
+  app.use((req, res) => {
+    res.status(404).json({ error: "Not found" });
   });
-});
+
+  const PORT = process.env.PORT || 5000;
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server started on port ${PORT}`);
+    console.log(`Time: ${new Date().toISOString()}`);
+    console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log(`Routes ready: ${routesReady ? 'YES' : 'NO'}`);
+  });
+
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received, gracefully shutting down');
+    server.close(() => {
+      console.log('Server closed');
+      process.exit(0);
+    });
+  });
+})();
 
 export default app;

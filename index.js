@@ -5,11 +5,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
-import authenticateToken from "./server/middleware/authenticate_token.js";
-import authRoutes from "./server/routes/auth-router.js";
-import restaurantsRouter from './server/routes/restaurants-router.js';
-import reviewsRouter from './server/routes/reviews-router.js';
-import pool from './server/db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === "production";
@@ -58,56 +53,91 @@ app.use((req, res, next) => {
 
 // Startup information
 console.log(`[CONFIG] NODE_ENV: ${process.env.NODE_ENV}`);
-console.log(`[CONFIG] CLIENT_ORIGIN: ${process.env.CLIENT_ORIGIN || 'https://food-review-app-rho.vercel.app'}`);
 console.log(`[CONFIG] PORT: ${process.env.PORT || 5000}`);
 
-// Mount routes
-app.use('/api/auth', authRoutes);
-app.use('/api/restaurants', restaurantsRouter);
-app.use('/api/reviews', reviewsRouter);
-
-// Health check endpoint
+// Health check endpoint (doesn't need database)
 app.get("/health", (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Root endpoint
+// Root endpoint (doesn't need database)
 app.get("/", (req, res) => {
   res.json({ message: "Backend is running", environment: process.env.NODE_ENV });
 });
 
-// Configuration debug endpoint (without sensitive info)
-app.get("/api/debug/config", (req, res) => {
+// Initialize database and routes
+let dbInitialized = false;
+let poolInstance = null;
+
+async function initializeDatabase() {
+  try {
+    console.log('[SERVER] Initializing database...');
+    
+    // Import the pool module
+    const poolModule = await import('./server/db.js');
+    poolInstance = poolModule.default;
+    
+    // Import route modules  
+    const authRouter = (await import('./server/routes/auth-router.js')).default;
+    const restaurantsRouter = (await import('./server/routes/restaurants-router.js')).default;
+    const reviewsRouter = (await import('./server/routes/reviews-router.js')).default;
+    const authenticateToken = (await import('./server/middleware/authenticate_token.js')).default;
+    
+    // Mount API routes
+    app.use('/api/auth', authRouter);
+    app.use('/api/restaurants', restaurantsRouter);
+    app.use('/api/reviews', reviewsRouter);
+    
+    // Protected endpoint
+    app.get("/api/protected", authenticateToken, (req, res) => {
+      res.json({ message: "Protected route accessed", user: req.user });
+    });
+    
+    dbInitialized = true;
+    console.log('[SERVER] Database and routes initialized successfully');
+  } catch (error) {
+    console.error('[SERVER] Failed to initialize database:', error.message);
+    console.error('[SERVER] Error:', error);
+    // Don't exit - server can still respond with error
+  }
+}
+
+// Status endpoint
+app.get("/api/debug/status", (req, res) => {
   res.json({
+    server_running: true,
+    database_initialized: dbInitialized,
     node_env: process.env.NODE_ENV,
-    port: process.env.PORT || 5000,
-    has_client_origin: !!process.env.CLIENT_ORIGIN,
-    has_db_host: !!process.env.DB_HOST,
-    has_database_url: !!process.env.DATABASE_URL,
-    db_host: process.env.DB_HOST || 'NOT SET',
-    db_port: process.env.DB_PORT || 'NOT SET',
-    version: "8913189",
     timestamp: new Date().toISOString()
   });
 });
 
-// Diagnostics endpoint
-app.get("/api/test-db", async (req, res) => {
-  try {
-    const [result] = await pool.query('SELECT COUNT(*) as cnt FROM restaurants');
-    res.json({
-      status: 'ok',
-      restaurants_count: result[0].cnt,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: error.message,
-      code: error.code,
-      timestamp: new Date().toISOString()
-    });
-  }
+// Start server first
+const PORT = process.env.PORT || 5000;
+const server = app.listen(PORT, "0.0.0.0", () => {
+  console.log(`[SERVER] Express server listening on port ${PORT}`);
+  console.log(`[SERVER] Listening on 0.0.0.0:${PORT}`);
+  console.log(`[STARTUP] Server started successfully at ${new Date().toISOString()}`);
+  
+  // Initialize database after server is listening
+  initializeDatabase();
+});
+
+// Error handlers
+process.on('uncaughtException', (err) => {
+  console.error('[ERROR] Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[ERROR] Unhandled Rejection:', reason);
+});
+
+process.on('SIGTERM', () => {
+  console.log('[SHUTDOWN] SIGTERM received');
+  server.close(() => {
+    console.log('[SHUTDOWN] Server closed');
+    process.exit(0);
+  });
 });
 
 // Dev token endpoint
@@ -118,34 +148,4 @@ app.get("/api/dev/token", (req, res) => {
   const testUser = { id: 1, email: "test@example.com" };
   const token = jwt.sign(testUser, process.env.JWT_SECRET || "dev-secret", { expiresIn: "1h" });
   res.json({ token, how_to_use: "Add header: Authorization: Bearer " + token });
-});
-
-// Protected endpoint
-app.get("/api/protected", authenticateToken, (req, res) => {
-  res.json({ message: "Protected route accessed", user: req.user });
-});
-
-const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`[STARTUP] Server started successfully at ${new Date().toISOString()}`);
-});
-
-// Handle unhandled errors
-process.on('uncaughtException', (err) => {
-  console.error('[ERROR] Uncaught Exception:', err);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('[ERROR] Unhandled Rejection at:', promise, 'reason:', reason);
-});
-
-// Graceful shutdown handling
-process.on('SIGTERM', () => {
-  console.log('[SHUTDOWN] SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('[SHUTDOWN] Server closed');
-    process.exit(0);
-  });
 });

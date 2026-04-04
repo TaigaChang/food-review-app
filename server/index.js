@@ -85,42 +85,29 @@ app.get("/api/dev/token", (req, res) => {
   const token = jwt.sign(testUser, process.env.JWT_SECRET || "dev-secret", { expiresIn: "1h" });
   res.json({ token, how_to_use: "Add header: Authorization: Bearer " + token });
 });
-
-// Import routes after server setup
-let authRoutes, restaurantsRouter, reviewsRouter;
-let dbReady = false;
-let dbError = null;
-let routesReady = false;
-
-// Try to import and initialize routes asynchronously
-const initializeRoutes = async () => {
+// Initialize app in async IIFE
+(async () => {
+  // Mount routes first (BEFORE error/404 handlers)
   try {
-    // Import routes
-    authRoutes = (await import('./routes/auth-router.js')).default;
-    restaurantsRouter = (await import('./routes/restaurants-router.js')).default;
-    reviewsRouter = (await import('./routes/reviews-router.js')).default;
+    console.log("[INIT] Mounting routes...");
+    const authRoutes = (await import('./routes/auth-router.js')).default;
+    const restaurantsRouter = (await import('./routes/restaurants-router.js')).default;
+    const reviewsRouter = (await import('./routes/reviews-router.js')).default;
     
-    // Mount routes BEFORE error handlers!
     app.use('/api/auth', authRoutes);
     app.use('/api/restaurants', restaurantsRouter);
     app.use('/api/reviews', reviewsRouter);
     
-    routesReady = true;
-    console.log("Routes initialized and mounted successfully");
+    console.log("[INIT] ✓ Routes mounted successfully");
   } catch (err) {
-    dbError = err;
-    console.error("Error initializing routes:", err.message, err.stack);
-    // Don't crash - serve health check only
+    console.error("[INIT_ERROR] Failed to mount routes:", err.message);
+    if (err.stack) console.error(err.stack);
+    process.exit(1);
   }
-};
 
-// Initialize routes BEFORE starting the server
-(async () => {
-  await initializeRoutes();
-  
   // Error handler (after all routes)
   app.use((err, req, res, next) => {
-    console.error("Unhandled error:", err);
+    console.error("[ERROR] Unhandled error:", err.message);
     res.status(500).json({ 
       error: "Internal server error", 
       message: process.env.NODE_ENV === "production" ? "Error processing request" : err.message 
@@ -129,25 +116,43 @@ const initializeRoutes = async () => {
 
   // 404 handler (LAST - catches all unmatched routes)
   app.use((req, res) => {
+    console.log(`[404] Not found: ${req.method} ${req.path}`);
     res.status(404).json({ error: "Not found" });
   });
 
+  // Start server
   const PORT = process.env.PORT || 5000;
   const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server started on port ${PORT}`);
-    console.log(`Time: ${new Date().toISOString()}`);
-    console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
-    console.log(`Routes ready: ${routesReady ? 'YES' : 'NO'}`);
+    console.log(`[SERVER] ✓ Listening on port ${PORT}`);
+    console.log(`[TIME] ${new Date().toISOString()}`);
+    console.log(`[ENV] NODE_ENV=${process.env.NODE_ENV}`);
+    console.log(`[SERVER] ✓ All systems running`);
+  });
+
+  server.on('error', (err) => {
+    console.error('[SERVER_ERROR]', err.message);
+    process.exit(1);
   });
 
   // Graceful shutdown
   process.on('SIGTERM', () => {
-    console.log('SIGTERM received, gracefully shutting down');
+    console.log('[SHUTDOWN] SIGTERM received, closing...');
     server.close(() => {
-      console.log('Server closed');
+      console.log('[SHUTDOWN] Server closed');
       process.exit(0);
     });
   });
 })();
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] Uncaught exception:', err.message);
+  console.error(err.stack);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[FATAL] Unhandled rejection:', reason);
+});
 
 export default app;

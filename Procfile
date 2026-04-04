@@ -1,1 +1,1 @@
-web: node --enable-source-maps index.js
+web: cd server && node --enable-source-maps index.js

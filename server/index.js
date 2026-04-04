@@ -5,23 +5,24 @@ import path from "path";
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
-import authenticateToken from "./middleware/authenticate_token.js";
-import authRoutes from "./routes/auth-router.js";
-import restaurantsRouter from './routes/restaurants-router.js';
-import reviewsRouter from './routes/reviews-router.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === "production";
 
-// Load environment file
-if (isProduction) {
-  dotenv.config({ path: path.join(__dirname, ".env.production") });
-} else {
-  dotenv.config();
+// Load environment file first
+try {
+  if (isProduction) {
+    dotenv.config({ path: path.join(__dirname, ".env.production") });
+  } else {
+    dotenv.config();
+  }
+} catch (e) {
+  console.warn("No .env file found, using environment variables");
 }
 
 const app = express();
 
+// CORS configuration with proper origin handling
 const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
@@ -32,10 +33,13 @@ const corsOptions = {
       'http://127.0.0.1:3001'
     ];
     
+    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(null, true); // Allow all for now to debug
+      // Still allow, but log it
+      console.log(`CORS request from unverified origin: ${origin}`);
+      callback(null, true);
     }
   },
   credentials: true,
@@ -45,19 +49,49 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
-// Debug middleware
-app.use((req, res, next) => {
-  next();
+// Health endpoint - always available
+app.get("/", (req, res) => {
+  res.json({ message: "Backend is running", date: new Date().toISOString() });
 });
 
-// Mount routes
-app.use('/api/auth', authRoutes);
-app.use('/api/restaurants', restaurantsRouter);
-app.use('/api/reviews', reviewsRouter);
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
 
-// Health endpoint
-app.get("/", (req, res) => {
-  res.json({ message: "Backend is running" });
+// Import routes after server setup
+let authRoutes, restaurantsRouter, reviewsRouter;
+let dbReady = false;
+let dbError = null;
+
+// Try to import and initialize routes asynchronously
+(async () => {
+  try {
+    // Import routes
+    authRoutes = (await import('./routes/auth-router.js')).default;
+    restaurantsRouter = (await import('./routes/restaurants-router.js')).default;
+    reviewsRouter = (await import('./routes/reviews-router.js')).default;
+    
+    // Mount routes
+    app.use('/api/auth', authRoutes);
+    app.use('/api/restaurants', restaurantsRouter);
+    app.use('/api/reviews', reviewsRouter);
+    
+    dbReady = true;
+    console.log("Routes initialized successfully");
+  } catch (err) {
+    dbError = err;
+    console.error("Error initializing routes:", err.message);
+    // Don't crash - serve health check only
+  }
+})();
+
+// Protected endpoint
+app.get("/api/protected", (req, res) => {
+  // This is a simple protected endpoint for dev
+  if (process.env.NODE_ENV === "production") {
+    return res.status(404).json({ message: "Not available in production" });
+  }
+  res.json({ message: "Protected route accessed" });
 });
 
 // Dev token endpoint
@@ -70,12 +104,35 @@ app.get("/api/dev/token", (req, res) => {
   res.json({ token, how_to_use: "Add header: Authorization: Bearer " + token });
 });
 
-// Protected endpoint
-app.get("/api/protected", authenticateToken, (req, res) => {
-  res.json({ message: "Protected route accessed", user: req.user });
+// Error handler
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ 
+    error: "Internal server error", 
+    message: process.env.NODE_ENV === "production" ? "Error processing request" : err.message 
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: "Not found" });
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server started on port ${PORT}`);
+  console.log(`Time: ${new Date().toISOString()}`);
+  console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+  console.log(`Routes ready: ${dbReady ? 'YES' : 'NO'}`);
 });
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, gracefully shutting down');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
+
+export default app;

@@ -9,6 +9,7 @@ import authenticateToken from "./server/middleware/authenticate_token.js";
 import authRoutes from "./server/routes/auth-router.js";
 import restaurantsRouter from './server/routes/restaurants-router.js';
 import reviewsRouter from './server/routes/reviews-router.js';
+import pool from './server/db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === "production";
@@ -23,10 +24,26 @@ if (isProduction) {
 const app = express();
 
 const corsOptions = {
-  origin: process.env.CLIENT_ORIGIN || ['https://food-review-app-rho.vercel.app', 'http://localhost:3001'],
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'https://food-review-app-rho.vercel.app',
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:3001'
+    ];
+    
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log(`[CORS] Rejecting origin: ${origin}`);
+      callback(new Error('CORS not allowed'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));

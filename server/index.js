@@ -9,6 +9,11 @@ import jwt from "jsonwebtoken";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === "production";
 
+console.log(`[STARTUP] Node process starting...`);
+console.log(`[STARTUP] __dirname: ${__dirname}`);
+console.log(`[STARTUP] NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`[STARTUP] isProduction: ${isProduction}`);
+
 // Load environment file first
 try {
   if (isProduction) {

@@ -73,13 +73,17 @@ async function migrateToProduction() {
 
     // Clear existing data
     console.log('🗑️  Clearing existing data...');
-    await connection.execute('DELETE FROM reviews');
-    await connection.execute('DELETE FROM restaurants');
-    await connection.execute('DELETE FROM users');
-    await connection.execute('DELETE FROM aggregated_ratings');
-    await connection.execute('DELETE FROM monthly_aggregated_ratings');
-    await connection.execute('DELETE FROM daily_aggregated_ratings');
-    console.log('✓ Cleared old data');
+    try {
+      await connection.execute('DELETE FROM reviews');
+      await connection.execute('DELETE FROM restaurants');
+      await connection.execute('DELETE FROM users');
+      await connection.execute('DELETE FROM aggregated_ratings');
+      await connection.execute('DELETE FROM monthly_aggregated_ratings');
+      await connection.execute('DELETE FROM daily_aggregated_ratings');
+      console.log('✓ Cleared old data');
+    } catch (error) {
+      console.log(`⚠️  Some tables may not exist (${error.message})`);
+    }
 
     // Execute all SQL commands
     let executed = 0;

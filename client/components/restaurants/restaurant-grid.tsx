@@ -147,7 +147,7 @@ export function RestaurantGrid() {
                   priceRange: "$$",
                   rating: Number(ratingValue),
                   reviewCount: reviewCount,
-                  image: restaurant.image_url || "/images/restaurant-default.jpg",
+                  image: (restaurant.image_url && String(restaurant.image_url).trim()) || "/placeholder.jpg",
                   description: "",
                   address: restaurant.address,
                   hours: restaurant.phone || "",

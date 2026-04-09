@@ -26,7 +26,7 @@ async function searchRestaurants(query) {
       headers: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": API_KEY,
-        "X-Goog-FieldMask": "places(id,displayName,formattedAddress,types)",
+        "X-Goog-FieldMask": "places(id,displayName,formattedAddress,types,photos)",
       },
       body: JSON.stringify({
         textQuery: query,

@@ -168,7 +168,15 @@ async function getAggregatedRatings(restaurantId) {
         );
 
         if (!rows || rows.length === 0) {
-            return null;
+            // Return default zero ratings for restaurants with no reviews
+            return {
+                avg_taste: 0,
+                avg_service: 0,
+                avg_ambiance: 0,
+                avg_price: 0,
+                avg_overall_alltime: 0,
+                review_count: 0
+            };
         }
 
         const row = rows[0];

@@ -62,7 +62,7 @@ export function FeaturedSection() {
         const restaurantsWithReviews = await Promise.all(
           topRestaurants.map(async (restaurant: any) => {
             const reviewsRes = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/api/reviews/restaurant?restaurant_id=${restaurant.id}`
+              `${process.env.NEXT_PUBLIC_API_URL}/reviews/restaurant?restaurant_id=${restaurant.id}`
             )
             const { reviews: reviewsData } = await reviewsRes.json()
             const reviews = reviewsData || []
@@ -72,7 +72,7 @@ export function FeaturedSection() {
 
             return {
               ...restaurant,
-              image: restaurant.image_url || "/images/restaurant-default.jpg",
+              image: (restaurant.image_url && String(restaurant.image_url).trim()) || "/placeholder.jpg",
               recentReview: recentReview
                 ? {
                     text: recentReview.comment,

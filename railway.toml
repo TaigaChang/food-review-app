@@ -1,7 +1,0 @@
-[build]
-builder = "nixpacks"
-
-[deploy]
-startCommand = "cd server && node simple.js"
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 5

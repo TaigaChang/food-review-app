@@ -247,7 +247,7 @@ export default function RestaurantDetailPage() {
           priceRange: "$$$", // Not provided by API
           rating: rating ? parseFloat(rating.avg_overall_alltime.toString()) : 0,
           reviewCount: apiReviews.length,
-          image: apiRestaurant.image_url || "/images/restaurant-1.jpg", // Use Google image or placeholder
+          image: (apiRestaurant.image_url && String(apiRestaurant.image_url).trim()) || "/placeholder.jpg",
           about: apiRestaurant.about || `Experience fine dining at ${apiRestaurant.name}, a ${apiRestaurant.cuisine} restaurant located at ${apiRestaurant.address}.`, // Use Google about or generated
           description: `Experience fine dining at ${apiRestaurant.name}, a ${apiRestaurant.cuisine} restaurant located at ${apiRestaurant.address}.`, // Fallback
           address: apiRestaurant.address,

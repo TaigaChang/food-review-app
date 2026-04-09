@@ -126,7 +126,8 @@ app.get("/api/dev/token", (req, res) => {
     console.log(`[SERVER] ✓ Listening on port ${PORT}`);
     console.log(`[TIME] ${new Date().toISOString()}`);
     console.log(`[ENV] NODE_ENV=${process.env.NODE_ENV}`);
-    console.log(`[SERVER] ✓ All systems running`);
+    console.log(`[DB_HOST] ${process.env.DB_HOST || 'localhost'}`);
+    console.log(`[SERVER] ✓ All systems running - DEPLOYMENT_v2`);
   });
 
   server.on('error', (err) => {

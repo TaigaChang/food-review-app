@@ -3,6 +3,6 @@ builder = "nixpacks"
 buildCommand = "cd server && npm install --omit=dev"
 
 [deploy]
-startCommand = "cd server && npm start"
+startCommand = "cd server && node simple.js"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 5

@@ -32,6 +32,6 @@
   },
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix client\" \"npm start --prefix server\"",
-    "start": "node simple-server.cjs"
+    "start": "cd server && node index.js"
   }
 }

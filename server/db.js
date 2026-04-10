@@ -2,6 +2,8 @@ import mysql from "mysql2/promise";
 
 const isProduction = process.env.NODE_ENV === "production";
 
+console.log('[DB] Initializing database connection...');
+
 let config;
 
 try {
@@ -29,7 +31,8 @@ try {
     console.log(`[DB] Connecting to ${config.host}/${config.database}`);
   }
 } catch (error) {
-  console.error('[DB] ❌ Config error:', error.message);
+  console.error('[DB] ❌ Config parsing error:', error.message);
+  console.error('[DB] Stack:', error.stack);
   // Fallback to local
   config = {
     host: "localhost",
@@ -37,7 +40,10 @@ try {
     password: "",
     database: "food_review_app",
   };
+  console.log('[DB] Using fallback config: localhost/food_review_app');
 }
+
+console.log('[DB] Creating connection pool...');
 
 const pool = mysql.createPool({
   ...config,
@@ -46,6 +52,8 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
+console.log('[DB] Connection pool created. Testing connection...');
+
 // Test connection on startup (always test in production to catch errors)
 pool.query('SELECT COUNT(*) as cnt FROM restaurants')
   .then(([rows]) => {
@@ -53,6 +61,13 @@ pool.query('SELECT COUNT(*) as cnt FROM restaurants')
   })
   .catch(err => {
     console.error(`[DB] ⚠️  Connection test failed:`, err.message);
+    if (err.code === 'ER_ACCESS_DENIED_ERROR') {
+      console.error('[DB] ❌ Access denied - check DATABASE_URL or credentials');
+    } else if (err.code === 'ER_BAD_DB_ERROR') {
+      console.error('[DB] ❌ Database does not exist');
+    } else if (err.code === 'ECONNREFUSED') {
+      console.error('[DB] ❌ Connection refused - database server not available');
+    }
     // Don't exit - app can still start even if DB is temporarily unavailable
   });
 

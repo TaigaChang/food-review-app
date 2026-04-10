@@ -10,6 +10,11 @@ import reviewsRouter from './routes/reviews-router.js';
 
 dotenv.config();
 const app = express();
+
+// Log startup info
+console.log('[APP] Starting server... NODE_ENV =', process.env.NODE_ENV);
+console.log('[APP] APP_PORT =', process.env.PORT || 'not set (will use default 5000)');
+
 // CORS configuration for different environments
 const corsOptions = {
   origin: function(origin, callback) {
@@ -67,6 +72,15 @@ app.get("/api/protected", authenticateToken, (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const server = app.listen(PORT, () => {
+  console.log(`[APP] ✅ Server listening on port ${PORT}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('[APP] SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('[APP] Server closed');
+    process.exit(0);
+  });
 });

@@ -134,7 +134,7 @@ export default function RestaurantDetailPage() {
           return
         }
 
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/reviews/user`
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/reviews/user`
         const response = await fetch(apiUrl, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -181,7 +181,7 @@ export default function RestaurantDetailPage() {
     const fetchData = async () => {
       try {
         // Fetch restaurant details
-        const resRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/restaurants/${id}`)
+        const resRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/restaurants/${id}`)
         if (!resRes.ok) {
           setNotFoundError(true)
           setLoading(false)
@@ -193,7 +193,7 @@ export default function RestaurantDetailPage() {
         // Fetch ratings
         let rating: ApiRating | null = null
         try {
-          const ratingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/restaurants/aggregated/${id}`)
+          const ratingRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/restaurants/aggregated/${id}`)
           if (ratingRes.ok) {
             const ratingData = await ratingRes.json()
             rating = ratingData.ratings
@@ -205,7 +205,7 @@ export default function RestaurantDetailPage() {
         // Fetch reviews
         let apiReviews: ApiReview[] = []
         try {
-          const reviewRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/restaurant?restaurant_id=${id}`)
+          const reviewRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reviews/restaurant?restaurant_id=${id}`)
           if (reviewRes.ok) {
             const reviewData = await reviewRes.json()
             apiReviews = reviewData.reviews || []
@@ -217,7 +217,7 @@ export default function RestaurantDetailPage() {
         // Fetch monthly ratings
         let apiMonthlyRatings: ApiMonthlyRating[] = []
         try {
-          const monthlyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/restaurants/monthly/${id}`)
+          const monthlyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/restaurants/monthly/${id}`)
           if (monthlyRes.ok) {
             const monthlyData = await monthlyRes.json()
             apiMonthlyRatings = monthlyData.monthlyRatings || []
@@ -229,7 +229,7 @@ export default function RestaurantDetailPage() {
         // Fetch daily ratings
         let apiDailyRatings: ApiDailyRating[] = []
         try {
-          const dailyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/restaurants/daily/${id}`)
+          const dailyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/restaurants/daily/${id}`)
           if (dailyRes.ok) {
             const dailyData = await dailyRes.json()
             apiDailyRatings = dailyData.dailyRatings || []

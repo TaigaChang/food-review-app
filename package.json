@@ -31,7 +31,6 @@
     "mysql2": "^3.15.3"
   },
   "scripts": {
-    "postinstall": "cd server && npm install",
     "dev": "concurrently \"npm run dev --prefix client\" \"npm start --prefix server\"",
     "start": "node simple-server.cjs"
   }

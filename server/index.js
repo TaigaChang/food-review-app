@@ -10,10 +10,22 @@ import reviewsRouter from './routes/reviews-router.js';
 
 dotenv.config();
 const app = express();
-// Allow the Next.js dev server (http://localhost:3001) to make credentialed requests
-// during development. In production this should be restricted to your app origin.
+// CORS configuration for different environments
 const corsOptions = {
-  origin: process.env.CLIENT_ORIGIN || 'http://localhost:3001',
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:3001',           // Local development
+      'http://localhost:3000',           // Local testing
+      'https://food-review-app-rho.vercel.app', // Production frontend
+    ];
+    
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 };
 app.use(cors(corsOptions));

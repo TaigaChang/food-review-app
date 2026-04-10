@@ -33,6 +33,6 @@
   "scripts": {
     "postinstall": "cd server && npm install",
     "dev": "concurrently \"npm run dev --prefix client\" \"npm start --prefix server\"",
-    "start": "cd server && node index.js"
+    "start": "node index.js"
   }
 }

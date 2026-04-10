@@ -53,6 +53,10 @@ app.get("/health", (req, res) => {
   }
 });
 
+// Railway health checks (various endpoints)
+app.head("/health", (req, res) => res.status(200).end());
+app.head("/", (req, res) => res.status(200).end());
+
 // Try to load routes
 console.log('[APP] Attempting to import routes...');
 let routesLoaded = false;

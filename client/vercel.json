@@ -3,6 +3,6 @@
   "outputDirectory": ".next",
   "framework": "nextjs",
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://food-review-app-production-f96f.up.railway.app"
+    "NEXT_PUBLIC_API_URL": "https://food-review-app-production-f96f.up.railway.app/api"
   }
 }

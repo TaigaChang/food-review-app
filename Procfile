@@ -1,1 +1,1 @@
-web: node test-simple-server.js
+web: cd server && node index.js

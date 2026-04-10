@@ -1,15 +1,20 @@
-// Root entry point - simply runs the server
-console.log(`[ROOT] Starting at ${new Date().toISOString()}`);
-console.log(`[ROOT] NODE_ENV: ${process.env.NODE_ENV}`);
-console.log(`[ROOT] PORT: ${process.env.PORT}`);
-console.log(`[ROOT] CWD: ${process.cwd()}`);
-console.log(`[ROOT] About to import server/index.js...`);
+// Ultra minimal - only Node built-ins, no npm packages
+import http from 'http';
 
-try {
-  await import('./server/index.js');
-  console.log(`[ROOT] ✅ Server module imported and running`);
-} catch (err) {
-  console.error(`[ROOT] ❌ FATAL ERROR:`, err.message);
-  console.error(`[ROOT] Stack:`, err.stack);
-  process.exit(1);
-}
+console.log('[ULTRA] Starting');
+
+const PORT = process.env.PORT || 5000;
+
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({
+    ok: true,
+    time: new Date().toISOString(),
+    port: PORT,
+    env: process.env.NODE_ENV
+  }));
+});
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`[ULTRA] Listening on ${PORT}`);
+});

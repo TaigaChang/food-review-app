@@ -1,10 +1,16 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 console.log('[APP] Init starting at', new Date().toISOString());
 
-dotenv.config();
+// Load environment-specific config
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+dotenv.config({ path: path.join(__dirname, envFile) });
 
 const app = express();
 

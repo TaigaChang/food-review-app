@@ -3,7 +3,10 @@ import pool from '../db.js';
 // Replace old API key with new one in image URLs
 function replaceApiKey(restaurants) {
     const oldKey = 'AIzaSyC9SLNXEQG8y8Y1Tuj3FYgEgyNUfSgGWnc';
-    const newKey = process.env.GOOGLE_PLACES_API_KEY || 'AIzaSyAu0jZBgqfC0ce09G-bxGoWeTlq2EnwILQ';
+    const newKey = 'AIzaSyAu0jZBgqfC0ce09G-bxGoWeTlq2EnwILQ';
+    
+    console.log('[API_KEY_REPLACE] Old key:', oldKey.substring(0, 10) + '...', 'New key:', newKey.substring(0, 10) + '...');
+    console.log('[API_KEY_REPLACE] process.env.GOOGLE_PLACES_API_KEY:', process.env.GOOGLE_PLACES_API_KEY ? 'SET' : 'NOT SET');
     
     if (Array.isArray(restaurants)) {
         return restaurants.map(restaurant => ({
